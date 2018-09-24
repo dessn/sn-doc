@@ -1,0 +1,467 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.framework.simulations.snana &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.framework.simulations.snana</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.framework.simulations.snana</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">binned_statistic</span>
+
+<span class="kn">from</span> <span class="nn">dessn.framework.simulation</span> <span class="k">import</span> <span class="n">Simulation</span>
+<span class="kn">from</span> <span class="nn">dessn.general.pecvelcor</span> <span class="k">import</span> <span class="n">get_sigma_mu_pecvel</span>
+<span class="kn">from</span> <span class="nn">dessn.framework.simulations.selection_effects</span> <span class="k">import</span> <span class="n">des_sel</span><span class="p">,</span> <span class="n">lowz_sel</span>
+
+
+<div class="viewcode-block" id="SNANASimulation"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation">[docs]</a><span class="k">class</span> <span class="nc">SNANASimulation</span><span class="p">(</span><span class="n">Simulation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_supernova</span><span class="p">,</span> <span class="n">sim_name</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">use_sim</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cov_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">global_calib</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span>
+                 <span class="n">shift</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;G10&quot;</span><span class="p">,</span> <span class="n">kappa</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">bias_cor</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">zlim</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">add_pecv</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">add_disp</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span> <span class="o">=</span> <span class="n">sim_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="nb">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">global_calib</span> <span class="o">=</span> <span class="n">global_calib</span>
+        <span class="n">this_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span> <span class="o">=</span> <span class="n">this_dir</span> <span class="o">+</span> <span class="s2">&quot;/snana_data/</span><span class="si">%s</span><span class="s2">/&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span>
+        <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span><span class="p">),</span> <span class="s2">&quot;Cannot find folder </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_sim</span> <span class="o">=</span> <span class="n">use_sim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span> <span class="o">=</span> <span class="n">num_nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">systematic_labels</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kappa</span> <span class="o">=</span> <span class="n">kappa</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_supernova</span> <span class="o">=</span> <span class="n">num_supernova</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cov_scale</span> <span class="o">=</span> <span class="n">cov_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manual_selection</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">shift</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_systematic_names</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">systematic_labels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bias_cor</span> <span class="o">=</span> <span class="n">bias_cor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zlim</span> <span class="o">=</span> <span class="n">zlim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_disp</span> <span class="o">=</span> <span class="n">add_disp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_pecv</span> <span class="o">=</span> <span class="n">add_pecv</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="SNANASimulation.get_correction"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_correction">[docs]</a>    <span class="k">def</span> <span class="nf">get_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cov_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">version</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">):</span>
+            <span class="n">version</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s2">&quot;_des&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting DES correction for sim </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">des_sel</span><span class="p">(</span><span class="n">cov_scale</span><span class="o">=</span><span class="n">cov_scale</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">kappa</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kappa</span><span class="p">,</span> <span class="n">zlim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">zlim</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="s2">&quot;_lowz&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting LOWZ correction for sim </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">lowz_sel</span><span class="p">(</span><span class="n">cov_scale</span><span class="o">=</span><span class="n">cov_scale</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">kappa</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kappa</span><span class="p">,</span> <span class="n">zlim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">zlim</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot find des or lowz in your sim name, unsure which selection function to use!&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_name"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_truth_values"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_truth_values">[docs]</a>    <span class="k">def</span> <span class="nf">get_truth_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;Om&quot;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Omega_m$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Ol&quot;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Omega_\Lambda$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$w$&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha_z&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha_z$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\beta$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;beta_z&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\beta_z$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_MB&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">19.365</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\langle M_B \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_x1&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\langle x_1^{</span><span class="si">%d</span><span class="s2">} \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_c&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\langle c^{</span><span class="si">%d</span><span class="s2">} \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_MB&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_{\rm m_B}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_x1&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_</span><span class="si">{x_1}</span><span class="s2">$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_c&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_c$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;log_sigma_MB&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\log\sigma_{\rm m_B}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;log_sigma_x1&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\log\sigma_</span><span class="si">{x_1}</span><span class="s2">$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;log_sigma_c&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\log\sigma_c$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha_c&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha_c$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;dscale&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta(0)$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;dratio&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta(\infty)/\delta(0)$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;intrinsic_correlation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\rho$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;calibration&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\delta \mathcal</span><span class="si">{Z}</span><span class="s2">_</span><span class="si">%d</span><span class="s2">$&quot;</span><span class="p">)</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_systematic_names"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_systematic_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_systematic_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">systematic_labels</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">this_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">this_dir</span> <span class="o">+</span> <span class="s2">&quot;/snana_data/</span><span class="si">%s</span><span class="s2">/sys_names.pkl&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">names</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">systematic_labels</span> <span class="o">=</span> <span class="n">names</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">systematic_labels</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_all_supernova"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_all_supernova">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_supernova</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_sne</span><span class="p">,</span> <span class="n">cosmology_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Getting SNANA data from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span><span class="p">)</span>
+
+        <span class="n">supernovae_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)]</span>
+        <span class="n">supernovae</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">supernovae_files</span><span class="p">))</span>
+        <span class="n">passed</span> <span class="o">=</span> <span class="n">supernovae</span> <span class="o">&gt;</span> <span class="mi">100</span>
+        <span class="n">mags</span> <span class="o">=</span> <span class="n">supernovae</span> <span class="o">-</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">passed</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sim_apparents&quot;</span><span class="p">:</span> <span class="n">mags</span><span class="p">,</span>
+            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">passed</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_bias_cor"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_bias_cor">[docs]</a>    <span class="k">def</span> <span class="nf">get_bias_cor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">des</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Getting biascor for des=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">des</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">des</span><span class="p">:</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;../DES3YR_DES_BHMEFF_AM</span><span class="si">%s</span><span class="s2">/passed_0.npy&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;../DES3YR_LOWZ_BHMEFF_</span><span class="si">%s</span><span class="s2">/passed_0.npy&quot;</span>
+        <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;C11&quot;</span><span class="p">,</span> <span class="s2">&quot;G10&quot;</span><span class="p">]</span>
+        <span class="n">bine</span> <span class="o">=</span> <span class="mi">30</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span> <span class="o">%</span> <span class="n">model</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">c_obs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">]</span>
+            <span class="n">c_true</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">c_obs</span> <span class="o">-</span> <span class="n">c_true</span>
+            <span class="n">mean</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+            <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+            <span class="n">std</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+
+        <span class="n">middle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">means</span><span class="p">)</span>
+        <span class="n">binc</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bine</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bine</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">binc</span><span class="p">,</span> <span class="n">models</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">middle</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_disp"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_disp">[docs]</a>    <span class="k">def</span> <span class="nf">get_disp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">des</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Getting dispersion for des=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">des</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">des</span><span class="p">:</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;../DES3YR_DES_BHMEFF_AM</span><span class="si">%s</span><span class="s2">/passed_0.npy&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;../DES3YR_LOWZ_BHMEFF_</span><span class="si">%s</span><span class="s2">/passed_0.npy&quot;</span>
+        <span class="n">models</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;C11&quot;</span><span class="p">,</span> <span class="s2">&quot;G10&quot;</span><span class="p">]</span>
+        <span class="n">bine</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span> <span class="o">%</span> <span class="n">model</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">mb_obs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span>
+            <span class="n">mb_true</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+            <span class="n">c_obs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">]</span>
+            <span class="n">c_true</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
+            <span class="n">c_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">12</span> <span class="o">+</span> <span class="mi">8</span><span class="p">])</span>
+            <span class="n">rms</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">c_obs</span> <span class="o">-</span> <span class="n">c_true</span><span class="p">)</span>
+
+            <span class="n">mean_rms</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">rms</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+            <span class="n">mean_cstd</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">c_std</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+
+            <span class="n">extra</span> <span class="o">=</span> <span class="n">mean_rms</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">mean_cstd</span><span class="o">**</span><span class="mi">2</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">extra</span><span class="p">)</span>
+            <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="n">means</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">means</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">final</span><span class="p">])</span>
+        <span class="n">binc</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bine</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bine</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;EXTRA &quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">final</span><span class="p">),</span> <span class="n">mean_rms</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">binc</span><span class="p">,</span> <span class="n">final</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_passed_supernova"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_passed_supernova">[docs]</a>    <span class="k">def</span> <span class="nf">get_passed_supernova</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_sne</span><span class="p">,</span> <span class="n">cosmology_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_folder</span> <span class="o">+</span> <span class="s2">&quot;passed_</span><span class="si">%d</span><span class="s2">.npy&quot;</span> <span class="o">%</span> <span class="n">cosmology_index</span>
+        <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;Cannot find file </span><span class="si">%s</span><span class="s2">, do you have this realisations?&quot;</span> <span class="o">%</span> <span class="n">filename</span>
+        <span class="n">supernovae</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> SN in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">supernovae</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">filename</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zlim</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">redshifts</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Enforcing zlim of </span><span class="si">%0.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">zlim</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">redshifts</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">zlim</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> supernova out of </span><span class="si">%d</span><span class="s2"> passed the redshift cut&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">supernovae</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">supernovae</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">n_sne</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">supernovae</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:</span><span class="n">n_sne</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_sne</span> <span class="o">=</span> <span class="n">supernovae</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;All SN requested: found </span><span class="si">%d</span><span class="s2"> SN&quot;</span> <span class="o">%</span> <span class="n">n_sne</span><span class="p">)</span>
+        <span class="n">cids</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">redshifts</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">masses</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">s_ap</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span>
+        <span class="n">s_st</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span>
+        <span class="n">s_co</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="n">apparents</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">]</span>
+        <span class="n">stretches</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">]</span>
+        <span class="n">colours</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">]</span>
+        <span class="c1"># bias_mB = supernovae[:, 9]</span>
+        <span class="c1"># bias_x1 = supernovae[:, 10]</span>
+        <span class="c1"># bias_c = supernovae[:, 11]</span>
+        <span class="n">extra_uncert</span> <span class="o">=</span> <span class="n">get_sigma_mu_pecvel</span><span class="p">(</span><span class="n">redshifts</span><span class="p">)</span>
+        <span class="n">obs_mBx1c_cov</span><span class="p">,</span> <span class="n">obs_mBx1c</span><span class="p">,</span> <span class="n">deta_dcalibs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="n">shift_amount</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">redshifts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">shift_deltas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">redshifts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">extra_colour_add</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">redshifts</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_disp</span><span class="p">:</span>
+            <span class="n">disp_z</span><span class="p">,</span> <span class="n">disp_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_disp</span><span class="p">(</span><span class="s2">&quot;_DES&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span><span class="p">)</span>
+            <span class="n">extra_colour_add</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">disp_z</span><span class="p">,</span> <span class="n">disp_ratio</span><span class="p">,</span> <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="p">(</span><span class="n">disp_ratio</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">disp_ratio</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))(</span><span class="n">redshifts</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias_cor</span><span class="p">:</span>
+            <span class="c1"># apparents -= bias_mB</span>
+            <span class="c1"># stretches -= bias_x1</span>
+            <span class="c1"># colours -= bias_c</span>
+            <span class="n">cor_z</span><span class="p">,</span> <span class="n">cor_models</span><span class="p">,</span> <span class="n">cor_means</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bias_cor</span><span class="p">(</span><span class="s2">&quot;_DES&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulation_name</span><span class="p">)</span>
+            <span class="c1"># shift0 = cor_means[0]</span>
+            <span class="c1"># shift_amount = interp1d(cor_z, shift0, bounds_error=False, fill_value=(shift0[0], shift0[-1]))(redshifts)</span>
+            <span class="c1"># delta = cor_means[1] - cor_means[0]</span>
+            <span class="c1"># shift_deltas = interp1d(cor_z, delta, bounds_error=False, fill_value=(delta[0], delta[-1]))(redshifts)</span>
+            <span class="n">shift_deltas</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">cor_z</span><span class="p">,</span> <span class="n">cor_means</span><span class="p">,</span> <span class="n">bounds_error</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="p">(</span><span class="n">cor_means</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cor_means</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))(</span><span class="n">redshifts</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">smb</span><span class="p">,</span> <span class="n">sx1</span><span class="p">,</span> <span class="n">sc</span><span class="p">,</span> <span class="n">eu</span><span class="p">,</span> <span class="n">sa</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">apparents</span><span class="p">,</span> <span class="n">stretches</span><span class="p">,</span> <span class="n">colours</span><span class="p">,</span> <span class="n">s_ap</span><span class="p">,</span> <span class="n">s_st</span><span class="p">,</span> <span class="n">s_co</span><span class="p">,</span> <span class="n">extra_uncert</span><span class="p">,</span> <span class="n">shift_amount</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_sim</span><span class="p">:</span>
+                <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.04</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">smb</span><span class="p">,</span> <span class="n">sx1</span><span class="p">,</span> <span class="n">sc</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cov</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mb</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">c</span> <span class="o">-</span> <span class="n">sa</span><span class="p">])</span>
+                <span class="n">cov</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">12</span><span class="p">:</span><span class="mi">12</span> <span class="o">+</span> <span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+                <span class="n">cov</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">extra_colour_add</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_pecv</span><span class="p">:</span>
+                <span class="n">cov</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">eu</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">calib</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">12</span><span class="o">+</span><span class="mi">9</span><span class="p">:]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">obs_mBx1c_cov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+            <span class="n">obs_mBx1c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+            <span class="n">deta_dcalibs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">calib</span><span class="p">)</span>
+        <span class="n">covs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obs_mBx1c_cov</span><span class="p">)</span>
+        <span class="n">deta_dcalibs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">deta_dcalibs</span><span class="p">)</span>
+        <span class="n">obs_mBx1c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obs_mBx1c</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;cids&quot;</span><span class="p">:</span> <span class="n">cids</span><span class="p">,</span>
+            <span class="s2">&quot;n_sne&quot;</span><span class="p">:</span> <span class="n">n_sne</span><span class="p">,</span>
+            <span class="s2">&quot;obs_mBx1c&quot;</span><span class="p">:</span> <span class="n">obs_mBx1c</span><span class="p">,</span>
+            <span class="s2">&quot;obs_mBx1c_cov&quot;</span><span class="p">:</span> <span class="n">covs</span><span class="p">,</span>
+            <span class="s2">&quot;deta_dcalib&quot;</span><span class="p">:</span> <span class="n">deta_dcalibs</span><span class="p">,</span>
+            <span class="s2">&quot;redshifts&quot;</span><span class="p">:</span> <span class="n">redshifts</span><span class="p">,</span>
+            <span class="s2">&quot;masses&quot;</span><span class="p">:</span> <span class="n">masses</span><span class="p">,</span>
+            <span class="s2">&quot;sim_apparents&quot;</span><span class="p">:</span> <span class="n">s_ap</span><span class="p">,</span>
+            <span class="s2">&quot;sim_stretches&quot;</span><span class="p">:</span> <span class="n">s_st</span><span class="p">,</span>
+            <span class="s2">&quot;sim_colours&quot;</span><span class="p">:</span> <span class="n">s_co</span><span class="p">,</span>
+            <span class="s2">&quot;shift_deltas&quot;</span><span class="p">:</span> <span class="n">shift_deltas</span><span class="p">,</span>
+            <span class="s2">&quot;prob_ia&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_sne</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="SNANASimulation.get_approximate_correction"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.snana.SNANASimulation.get_approximate_correction">[docs]</a>    <span class="k">def</span> <span class="nf">get_approximate_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">manual_selection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">manual_selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_correction</span><span class="p">(</span><span class="n">cov_scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cov_scale</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">manual_selection</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

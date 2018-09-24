@@ -1,0 +1,582 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.snana.convert_snana_data &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.snana.convert_snana_data</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.snana.convert_snana_data</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Sep 15 12:42:49 2016</span>
+
+<span class="sd">@author: shint1</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">fnmatch</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">binned_statistic</span>
+<span class="kn">from</span> <span class="nn">dessn.snana.systematic_names</span> <span class="k">import</span> <span class="n">get_systematic_mapping</span>
+
+
+<div class="viewcode-block" id="load_fitres"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.load_fitres">[docs]</a><span class="k">def</span> <span class="nf">load_fitres</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+    <span class="c1"># logging.debug(&quot;Loading %s&quot; % filename)</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.gz&quot;</span><span class="p">):</span>
+        <span class="n">compression</span> <span class="o">=</span> <span class="s2">&quot;gzip&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">compression</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">compression</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="n">skiprows</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;#&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Filename </span><span class="si">%s</span><span class="s2"> failed to load&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CID&#39;</span><span class="p">,</span> <span class="s1">&#39;IDSURVEY&#39;</span><span class="p">,</span> <span class="s1">&#39;zHD&#39;</span><span class="p">,</span> <span class="s1">&#39;HOST_LOGMASS&#39;</span><span class="p">,</span> <span class="s1">&#39;HOST_LOGMASS_ERR&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;x1ERR&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;cERR&#39;</span><span class="p">,</span> <span class="s1">&#39;mB&#39;</span><span class="p">,</span> <span class="s1">&#39;mBERR&#39;</span><span class="p">,</span> <span class="s1">&#39;x0&#39;</span><span class="p">,</span> <span class="s1">&#39;x0ERR&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;COV_x1_c&#39;</span><span class="p">,</span> <span class="s1">&#39;COV_x1_x0&#39;</span><span class="p">,</span> <span class="s1">&#39;COV_c_x0&#39;</span><span class="p">,</span> <span class="s1">&#39;SIM_mB&#39;</span><span class="p">,</span> <span class="s1">&#39;SIM_x1&#39;</span><span class="p">,</span> <span class="s1">&#39;SIM_c&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;biasCor_mB&#39;</span><span class="p">,</span> <span class="s1">&#39;biasCor_x1&#39;</span><span class="p">,</span> <span class="s1">&#39;biasCor_c&#39;</span><span class="p">]</span>
+    <span class="n">final_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">columns</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="n">final_columns</span><span class="p">]</span><span class="o">.</span><span class="n">to_records</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="is_pos_def"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.is_pos_def">[docs]</a><span class="k">def</span> <span class="nf">is_pos_def</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_scaling"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.get_scaling">[docs]</a><span class="k">def</span> <span class="nf">get_scaling</span><span class="p">():</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">scale_file</span> <span class="o">=</span> <span class="n">dir_name</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s2">&quot;CREATE_COV.INPUT&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">scale_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ERRSCALE&quot;</span><span class="p">):</span>
+                <span class="n">comps</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">comps</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">comps</span><span class="p">[</span><span class="mi">3</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="load_systematic_names"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.load_systematic_names">[docs]</a><span class="k">def</span> <span class="nf">load_systematic_names</span><span class="p">(</span><span class="n">nml_file</span><span class="p">):</span>
+    <span class="n">expression</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;[^#]ITOPT.*\[(.*)\](?!.*FITOPT000).&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">nml_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">expression</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="get_systematic_scales"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.get_systematic_scales">[docs]</a><span class="k">def</span> <span class="nf">get_systematic_scales</span><span class="p">(</span><span class="n">nml_file</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="n">scaling</span> <span class="o">=</span> <span class="n">get_scaling</span><span class="p">()</span>
+    <span class="n">systematic_names</span> <span class="o">=</span> <span class="n">load_systematic_names</span><span class="p">(</span><span class="n">nml_file</span><span class="p">)</span>
+    <span class="n">sys_label_dict</span> <span class="o">=</span> <span class="n">get_systematic_mapping</span><span class="p">()</span>
+    <span class="n">systematic_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">sys_label_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">systematic_names</span><span class="p">]</span>
+    <span class="n">systematics_scales</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">systematic_names</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">override</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scaling</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">fnmatch</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+                    <span class="n">scale</span> <span class="o">=</span> <span class="n">s</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Override engaged. Setting scales to unity.&quot;</span><span class="p">)</span>
+        <span class="n">systematics_scales</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;systemtatic scales are </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">systematics_scales</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">systematic_labels</span><span class="p">,</span> <span class="n">systematics_scales</span></div>
+
+
+<div class="viewcode-block" id="get_directories"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.get_directories">[docs]</a><span class="k">def</span> <span class="nf">get_directories</span><span class="p">(</span><span class="n">base_folder</span><span class="p">):</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">dir_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+    <span class="n">dump_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">dir_name</span> <span class="o">+</span> <span class="s2">&quot;/data_dump/&quot;</span> <span class="o">+</span> <span class="n">base_folder</span><span class="p">)</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">dir_name</span> <span class="o">+</span> <span class="s2">&quot;/../framework/simulations/snana_data/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span>
+    <span class="k">if</span> <span class="n">base_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">):</span>
+        <span class="n">base_folder</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">nml_file</span> <span class="o">=</span> <span class="n">dump_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">base_folder</span> <span class="o">+</span> <span class="s2">&quot;.nml&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">nml_file</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Cannot find the NML file at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nml_file</span><span class="p">)</span>
+        <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dump_dir</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">nml_file</span></div>
+
+
+<div class="viewcode-block" id="get_realisations"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.get_realisations">[docs]</a><span class="k">def</span> <span class="nf">get_realisations</span><span class="p">(</span><span class="n">base_folder</span><span class="p">,</span> <span class="n">dump_dir</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">base_folder</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">):</span>
+        <span class="n">base_folder</span> <span class="o">=</span> <span class="n">base_folder</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">base_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">):</span>
+        <span class="n">base_folder</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Base folder for sims: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">base_folder</span><span class="p">)</span>
+    <span class="n">inner_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dump_dir</span><span class="p">)))</span>
+    <span class="n">inner_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">dump_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">inner_files</span><span class="p">]</span>
+    <span class="n">sim_dirs</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inner_paths</span><span class="p">,</span> <span class="n">inner_files</span><span class="p">)</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;DES3YR&quot;</span><span class="p">)]</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">%d</span><span class="s2"> sim directories in </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sim_dirs</span><span class="p">),</span> <span class="n">dump_dir</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">sim_dirs</span></div>
+
+
+<div class="viewcode-block" id="load_dump_file"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.load_dump_file">[docs]</a><span class="k">def</span> <span class="nf">load_dump_file</span><span class="p">(</span><span class="n">sim_dir</span><span class="p">):</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;SIMGEN.DAT.gz&quot;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">sim_dir</span> <span class="o">+</span> <span class="s2">&quot;/SIMGEN.DAT.gz&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;SIMGEN.DAT&quot;</span>
+    <span class="n">compression</span> <span class="o">=</span> <span class="s2">&quot;gzip&quot;</span> <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;gz&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;SN&quot;</span><span class="p">,</span> <span class="s2">&quot;CID&quot;</span><span class="p">,</span> <span class="s2">&quot;S2mb&quot;</span><span class="p">,</span> <span class="s2">&quot;MAGSMEAR_COH&quot;</span><span class="p">,</span> <span class="s2">&quot;S2c&quot;</span><span class="p">,</span> <span class="s2">&quot;S2x1&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">]</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CID&quot;</span><span class="p">,</span> <span class="s2">&quot;S2mb&quot;</span><span class="p">,</span> <span class="s2">&quot;MAGSMEAR_COH&quot;</span><span class="p">,</span> <span class="s2">&quot;S2c&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">]</span>
+    <span class="n">dtypes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">sim_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">compression</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span>
+                            <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;V&quot;</span><span class="p">,</span> <span class="n">error_bad_lines</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loaded dump file from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">filename</span><span class="p">))</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">to_records</span><span class="p">()</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keep</span><span class="p">,</span> <span class="n">dtypes</span><span class="p">)]</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;CID&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;S2mb&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;MAGSMEAR_COH&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                                <span class="p">(</span><span class="s2">&quot;S2c&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;Z&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)])</span>
+    <span class="n">good_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;S2mb&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;S2mb&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">good_mask</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="digest_simulation"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.digest_simulation">[docs]</a><span class="k">def</span> <span class="nf">digest_simulation</span><span class="p">(</span><span class="n">sim_dir</span><span class="p">,</span> <span class="n">systematics_scales</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">systematic_labels</span><span class="p">,</span> <span class="n">load_dump</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">biascor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zipped</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="n">max_offset_mB</span> <span class="o">=</span> <span class="mf">0.2</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="s2">&quot;-0&quot;</span> <span class="ow">in</span> <span class="n">sim_dir</span><span class="p">:</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sim_dir</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-0&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Digesting index </span><span class="si">%d</span><span class="s2"> in folder </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ind</span><span class="p">,</span> <span class="n">sim_dir</span><span class="p">))</span>
+
+    <span class="n">bias_fitres</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">biascor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Biascor is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">biascor</span><span class="p">)</span>
+        <span class="n">short_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sim_dir</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;DES3YR&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_DES_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_LOWZ_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">bias_loc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">sim_dir</span><span class="p">))</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">biascor</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">short_name</span>
+        <span class="n">bias_fitres_file</span> <span class="o">=</span> <span class="n">bias_loc</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s2">&quot;SALT2mu_FITOPT000_MUOPT000.FITRES&quot;</span>
+        <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">bias_fitres_file</span><span class="p">)</span>
+        <span class="n">fres</span> <span class="o">=</span> <span class="n">load_fitres</span><span class="p">(</span><span class="n">bias_fitres_file</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">bias_fitres</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;IDSURVEY&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;CID&quot;</span><span class="p">]):</span> <span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;biasCor_mB&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;biasCor_x1&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;biasCor_c&#39;</span><span class="p">]]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">fres</span><span class="p">}</span>
+
+    <span class="n">inner_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">sim_dir</span><span class="p">)))</span>
+    <span class="n">ending</span> <span class="o">=</span> <span class="s2">&quot;.FITRES.gz&quot;</span> <span class="k">if</span> <span class="n">zipped</span> <span class="k">else</span> <span class="s2">&quot;.FITRES&quot;</span>
+    <span class="n">fitres_files</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">sim_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inner_files</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">ending</span><span class="p">)])</span>
+    <span class="n">base_fitres</span> <span class="o">=</span> <span class="n">fitres_files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sysematics_fitres</span> <span class="o">=</span> <span class="n">fitres_files</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Have </span><span class="si">%d</span><span class="s2"> fitres files for systematics&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">sysematics_fitres</span><span class="p">))</span>
+
+    <span class="n">base_fits</span> <span class="o">=</span> <span class="n">load_fitres</span><span class="p">(</span><span class="n">base_fitres</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="n">skip</span><span class="p">)</span>
+    <span class="n">sysematics</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_fitres</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">skiprows</span><span class="o">=</span><span class="n">skip</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">sysematics_fitres</span><span class="p">]</span>
+
+    <span class="n">sysematics_sort_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="s1">&#39;CID&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">sysematics</span><span class="p">]</span>
+    <span class="n">sysematics_idss</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span> <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">m</span><span class="p">[</span><span class="s1">&#39;CID&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sysematics</span><span class="p">,</span> <span class="n">sysematics_sort_indexes</span><span class="p">)]</span>
+    <span class="n">systematic_labels_save</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">sc</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">systematics_scales</span><span class="p">,</span> <span class="n">systematic_labels</span><span class="p">)</span> <span class="k">if</span> <span class="n">sc</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">num_bad_calib</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">num_bad_calib_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">systematic_labels_save</span><span class="p">))</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Have </span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> systematics&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sysematics</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">sysematics_sort_indexes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">sysematics_idss</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">systematics_scales</span><span class="p">)))</span>
+
+    <span class="n">final_results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">passed_cids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_offsets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Have </span><span class="si">%d</span><span class="s2"> rows to process&quot;</span> <span class="o">%</span> <span class="n">base_fits</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">mass_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">base_fits</span><span class="p">[</span><span class="s2">&quot;HOST_LOGMASS_ERR&quot;</span><span class="p">])</span>
+    <span class="n">not_found</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fake_mass</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">mass_mean</span> <span class="o">==</span> <span class="o">-</span><span class="mi">9</span> <span class="ow">or</span> <span class="n">mass_mean</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Mass is fake&quot;</span><span class="p">)</span>
+        <span class="n">fake_mass</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">base_fits</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Up to row </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">cid</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;CID&#39;</span><span class="p">]</span>
+        <span class="n">survey_id</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;IDSURVEY&#39;</span><span class="p">]</span>
+
+        <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">survey_id</span><span class="p">,</span> <span class="n">cid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bias_fitres</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">not_found</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">bias_mB</span><span class="p">,</span> <span class="n">bias_x1</span><span class="p">,</span> <span class="n">bias_c</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bias_fitres</span><span class="p">:</span>
+                <span class="n">not_found</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bias_mB</span><span class="p">,</span> <span class="n">bias_x1</span><span class="p">,</span> <span class="n">bias_c</span> <span class="o">=</span> <span class="n">bias_fitres</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="n">z</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;zHD&#39;</span><span class="p">]</span>
+
+        <span class="n">mb</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;mB&#39;</span><span class="p">]</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;x0&#39;</span><span class="p">]</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">]</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span>
+
+        <span class="n">mass</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;HOST_LOGMASS&#39;</span><span class="p">]</span>
+        <span class="n">mass_err</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;HOST_LOGMASS_ERR&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mass</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">mass_prob</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mass_err</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
+                <span class="n">mass_err</span> <span class="o">=</span> <span class="mf">0.01</span>
+            <span class="n">mass_prob</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">mass</span><span class="p">,</span> <span class="n">mass_err</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fake_mass</span><span class="p">:</span>
+            <span class="n">mass_prob</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">mbe</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;mBERR&quot;</span><span class="p">]</span>
+        <span class="n">x1e</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;x1ERR&quot;</span><span class="p">]</span>
+        <span class="n">ce</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;cERR&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;SIM_mB&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">sim_mb</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">sim_x1</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">sim_c</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sim_mb</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;SIM_mB&quot;</span><span class="p">]</span>
+            <span class="n">sim_x1</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;SIM_x1&quot;</span><span class="p">]</span>
+            <span class="n">sim_c</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;SIM_c&quot;</span><span class="p">]</span>
+
+        <span class="n">cov_x1_c</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;COV_x1_c&quot;</span><span class="p">]</span>
+        <span class="n">cov_x0_c</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;COV_c_x0&quot;</span><span class="p">]</span>
+        <span class="n">cov_x1_x0</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;COV_x1_x0&quot;</span><span class="p">]</span>
+
+        <span class="n">cmbx1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5</span> <span class="o">*</span> <span class="n">cov_x1_x0</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+        <span class="n">cmbc</span> <span class="o">=</span> <span class="o">-</span><span class="mi">5</span> <span class="o">*</span> <span class="n">cov_x0_c</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">mbe</span> <span class="o">*</span> <span class="n">mbe</span><span class="p">,</span> <span class="n">cmbx1</span><span class="p">,</span> <span class="n">cmbc</span><span class="p">],</span> <span class="p">[</span><span class="n">cmbx1</span><span class="p">,</span> <span class="n">x1e</span> <span class="o">*</span> <span class="n">x1e</span><span class="p">,</span> <span class="n">cov_x1_c</span><span class="p">],</span> <span class="p">[</span><span class="n">cmbc</span><span class="p">,</span> <span class="n">cov_x1_c</span><span class="p">,</span> <span class="n">ce</span> <span class="o">*</span> <span class="n">ce</span><span class="p">]])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_pos_def</span><span class="p">(</span><span class="n">cov</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="n">offset_mb</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">offset_x1</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">offset_c</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">mag</span><span class="p">,</span> <span class="n">sorted_indexes</span><span class="p">,</span> <span class="n">magcids</span><span class="p">,</span> <span class="n">scale</span> <span class="ow">in</span> \
+                <span class="nb">zip</span><span class="p">(</span><span class="n">sysematics</span><span class="p">,</span> <span class="n">sysematics_sort_indexes</span><span class="p">,</span> <span class="n">sysematics_idss</span><span class="p">,</span> <span class="n">systematics_scales</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">scale</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">mag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">offset_mb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">offset_x1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">offset_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">magcids</span><span class="p">,</span> <span class="n">cid</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">magcids</span><span class="o">.</span><span class="n">size</span> <span class="ow">or</span> <span class="n">magcids</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">!=</span> <span class="n">cid</span><span class="p">:</span>
+                <span class="n">offset_mb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">offset_x1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                <span class="n">offset_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">offset_mb</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">mag</span><span class="p">[</span><span class="s1">&#39;mB&#39;</span><span class="p">][</span><span class="n">sorted_indexes</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mb</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span>
+                <span class="n">offset_x1</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">mag</span><span class="p">[</span><span class="s1">&#39;x1&#39;</span><span class="p">][</span><span class="n">sorted_indexes</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span> <span class="o">-</span> <span class="n">x1</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span>
+                <span class="n">offset_c</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">mag</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">][</span><span class="n">sorted_indexes</span><span class="p">[</span><span class="n">index</span><span class="p">]]</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">offset_mb</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">offset_mb</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">offset_x1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">offset_c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">offset_mb</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">offset_mb</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_offset_mB</span><span class="p">):</span>
+            <span class="n">num_bad_calib</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">num_bad_calib_index</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">offset_mb</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="n">offsets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">offset_mb</span><span class="p">,</span> <span class="n">offset_x1</span><span class="p">,</span> <span class="n">offset_c</span><span class="p">))</span>
+        <span class="n">passed_cids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cid</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cid</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">cid</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">cid</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span> <span class="mi">16</span><span class="p">)</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">8</span>
+        <span class="n">all_offsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offsets</span><span class="p">)</span>
+        <span class="n">final_result</span> <span class="o">=</span> <span class="p">[</span><span class="n">cid</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">mass_prob</span><span class="p">,</span> <span class="n">sim_mb</span><span class="p">,</span> <span class="n">sim_x1</span><span class="p">,</span> <span class="n">sim_c</span><span class="p">,</span> <span class="n">mb</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">bias_mB</span><span class="p">,</span> <span class="n">bias_x1</span><span class="p">,</span> <span class="n">bias_c</span><span class="p">]</span> \
+                       <span class="o">+</span> <span class="n">cov</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">offsets</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">final_results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">final_result</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+
+    <span class="n">fitted_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">final_results</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/passed_</span><span class="si">%d</span><span class="s2">.npy&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">ind</span><span class="p">),</span> <span class="n">fitted_data</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Bias not found for </span><span class="si">%d</span><span class="s2">  out of </span><span class="si">%d</span><span class="s2"> SN (</span><span class="si">%d</span><span class="s2"> found)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">not_found</span><span class="p">,</span> <span class="n">base_fits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">base_fits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">not_found</span><span class="p">))</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calib faliures: </span><span class="si">%d</span><span class="s2"> in total. Breakdown: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">num_bad_calib</span><span class="p">,</span> <span class="n">num_bad_calib_index</span><span class="p">))</span>
+
+    <span class="c1"># Save the labels out</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">+</span> <span class="s2">&quot;/sys_names.pkl&quot;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">systematic_labels_save</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">HIGHEST_PROTOCOL</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">load_dump</span><span class="p">:</span>
+
+        <span class="n">supernovae</span> <span class="o">=</span> <span class="n">load_dump_file</span><span class="p">(</span><span class="n">sim_dir</span><span class="p">)</span>
+        <span class="n">all_mags</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[</span><span class="s2">&quot;S2mb&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">+</span> <span class="n">supernovae</span><span class="p">[</span><span class="s2">&quot;MAGSMEAR_COH&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">all_zs</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[</span><span class="s2">&quot;Z&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="n">all_cids</span> <span class="o">=</span> <span class="n">supernovae</span><span class="p">[</span><span class="s2">&quot;CID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+        <span class="n">cids_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">c</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">passed_cids</span><span class="p">])</span>
+
+        <span class="n">supernovae_passed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">c</span> <span class="ow">in</span> <span class="n">cids_dict</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">all_cids</span><span class="p">])</span>
+        <span class="n">mask_nan</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">all_mags</span><span class="p">)</span>
+
+        <span class="n">all_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">all_mags</span><span class="p">[</span><span class="n">mask_nan</span><span class="p">]</span> <span class="o">+</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">supernovae_passed</span><span class="p">[</span><span class="n">mask_nan</span><span class="p">],</span> <span class="n">all_zs</span><span class="p">[</span><span class="n">mask_nan</span><span class="p">]))</span><span class="o">.</span><span class="n">T</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">all_data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">all_data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">7000000</span><span class="p">:</span>
+            <span class="n">all_data</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[:</span><span class="mi">7000000</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_dir</span> <span class="o">+</span> <span class="s2">&quot;/all_</span><span class="si">%s</span><span class="s2">.npy&quot;</span> <span class="o">%</span> <span class="n">ind</span><span class="p">,</span> <span class="n">all_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> nans in apparents. Probably correspond to num sims.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="o">~</span><span class="n">mask_nan</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.convert_snana_data.convert">[docs]</a><span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">base_folder</span><span class="p">,</span> <span class="n">load_dump</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">biascor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zipped</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="n">dump_dir</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">nml_file</span> <span class="o">=</span> <span class="n">get_directories</span><span class="p">(</span><span class="n">base_folder</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Found nml file </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">nml_file</span><span class="p">)</span>
+    <span class="n">systematic_labels</span><span class="p">,</span> <span class="n">systematics_scales</span> <span class="o">=</span> <span class="n">get_systematic_scales</span><span class="p">(</span><span class="n">nml_file</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="n">override</span><span class="p">)</span>
+    <span class="n">sim_dirs</span> <span class="o">=</span> <span class="n">get_realisations</span><span class="p">(</span><span class="n">base_folder</span><span class="p">,</span> <span class="n">dump_dir</span><span class="p">)</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">base_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">):</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">base_folder</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">sim_dirs</span><span class="p">:</span>
+        <span class="n">sim_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;-0&quot;</span> <span class="ow">in</span> <span class="n">sim_name</span><span class="p">:</span>
+            <span class="n">this_output_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="n">sim_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;-0&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">this_output_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="n">sim_name</span>
+        <span class="k">if</span> <span class="n">base_folder</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">):</span>
+            <span class="n">this_output_dir</span> <span class="o">+=</span> <span class="s2">&quot;sys&quot;</span>
+        <span class="n">this_output_dir</span> <span class="o">+=</span> <span class="n">version</span>
+        <span class="n">digest_simulation</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">systematics_scales</span><span class="p">,</span> <span class="n">this_output_dir</span><span class="p">,</span> <span class="n">systematic_labels</span><span class="p">,</span> <span class="n">load_dump</span><span class="o">=</span><span class="n">load_dump</span><span class="p">,</span>
+                          <span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">,</span> <span class="n">biascor</span><span class="o">=</span><span class="n">biascor</span><span class="p">,</span> <span class="n">zipped</span><span class="o">=</span><span class="n">zipped</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;[</span><span class="si">%(funcName)20s</span><span class="s2">()] </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_COMBINED_TEXT_v8&quot;)</span>
+    <span class="n">convert</span><span class="p">(</span><span class="s2">&quot;DES3YR_DES_COMBINED_TEXT_v8&quot;</span><span class="p">)</span>
+    <span class="c1"># convert(&quot;DES3YR_DES_NOMINAL&quot;)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_NOMINAL&quot;)</span>
+    <span class="c1"># convert(&quot;DES3YR_DES_BULK_v8&quot;, skip=6)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_BULK_v8&quot;, skip=6)</span>
+    <span class="c1"># convert(&quot;DES3YR_DES_SAM_COHERENT_v8&quot;, skip=11)</span>
+    <span class="c1"># convert(&quot;DES3YR_DES_SAM_MINUIT_v8&quot;, skip=11)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_SAM_COHERENT_v8&quot;, skip=11)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_SAM_MINUIT_v8&quot;, skip=11)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_BULK&quot;, skip=6)</span>
+    <span class="c1"># convert(&quot;DES3YR_DES_SAMTEST&quot;, skip=11)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_SAMTEST&quot;, skip=11)</span>
+    <span class="c1"># convert(&quot;DES3YR_DES_BHMEFF_v8&quot;, load_dump=True, skip=11, zipped=True)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_BHMEFF_v8&quot;, load_dump=True, skip=11, zipped=True)</span>
+    <span class="c1"># convert(&quot;DES3YR_LOWZ_VALIDATION&quot;, skip=11)</span>
+    <span class="c1"># convert(&quot;DES3YR_DES_VALIDATION&quot;, skip=11)</span>
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,332 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.utility.doJob &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.utility.doJob</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.utility.doJob</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+
+<div class="viewcode-block" id="write_jobscript"><a class="viewcode-back" href="../../../dessn.utility.html#dessn.utility.doJob.write_jobscript">[docs]</a><span class="k">def</span> <span class="nf">write_jobscript</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">queue</span><span class="o">=</span><span class="s2">&quot;low.q&quot;</span><span class="p">,</span> <span class="n">num_tasks</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">num_cpu</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+                    <span class="n">num_walks</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">outdir</span><span class="o">=</span><span class="s2">&quot;out_files&quot;</span><span class="p">,</span> <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+    <span class="n">executable</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">executable</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">outdir</span>
+    <span class="n">error_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s2">&quot;errors&quot;</span>
+    <span class="k">if</span> <span class="n">delete</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Deleting &quot;</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">error_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">error_dir</span><span class="p">)</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;#!/bin/bash</span>
+<span class="s1">#$ -S /bin/bash</span>
+<span class="s1">#$ -pe threaded 1</span>
+<span class="s1">#$ -M samuelreay@gmail.com</span>
+<span class="s1">#$ -N </span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">#$ -m abe</span>
+<span class="s1">#$ -q </span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">#$ -V</span>
+<span class="s1">#$ -t 1:</span><span class="si">%d</span><span class="s1"></span>
+<span class="s1">#$ -tc </span><span class="si">%d</span><span class="s1"></span>
+<span class="s1">#$ -wd </span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">#$ -o </span><span class="si">%s</span><span class="s1">/$JOB_NAME.$JOB_ID.out</span>
+<span class="s1">#$ -e </span><span class="si">%s</span><span class="s1">/errors</span>
+<span class="s1">IDIR=</span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">export PATH=$HOME/miniconda/bin:$PATH</span>
+<span class="s1">source activate sam35</span>
+
+<span class="s1">export OMP_NUM_THREADS=&quot;1&quot; # set this for OpenMP threads control</span>
+<span class="s1">export MKL_NUM_THREADS=&quot;1&quot; # set this for Intel MKL threads control</span>
+<span class="s1">echo &#39;running with OMP_NUM_THREADS =&#39; $OMP_NUM_THREADS</span>
+<span class="s1">echo &#39;running with MKL_NUM_THREADS =&#39; $MKL_NUM_THREADS</span>
+<span class="s1">echo &#39;running with NSLOTS=&#39; $NSLOTS # number of SGE calcs</span>
+<span class="s1">PROG=</span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">PARAMS=`expr $SGE_TASK_ID - 1`</span>
+<span class="s1">cd $IDIR</span>
+
+<span class="s1">sleep $((RANDOM </span><span class="si">%%</span><span class="s1"> 10))</span>
+<span class="s1">python $PROG $PARAMS </span><span class="si">%d</span><span class="s1">&#39;&#39;&#39;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/jobscript_</span><span class="si">%s</span><span class="s2">.q&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">executable</span><span class="p">[:</span><span class="n">executable</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">)])</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">queue</span><span class="p">,</span> <span class="n">num_tasks</span><span class="p">,</span> <span class="n">num_cpu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span>
+                    <span class="n">output_dir</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">executable</span><span class="p">,</span> <span class="n">num_walks</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SGE Jobscript at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">n</span></div>
+
+
+<div class="viewcode-block" id="write_jobscript_slurm"><a class="viewcode-back" href="../../../dessn.utility.html#dessn.utility.doJob.write_jobscript_slurm">[docs]</a><span class="k">def</span> <span class="nf">write_jobscript_slurm</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_tasks</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span> <span class="n">num_cpu</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+                          <span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">partition</span><span class="o">=</span><span class="s2">&quot;smp&quot;</span><span class="p">):</span>
+
+    <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+    <span class="n">executable</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">executable</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="s2">&quot;out_files&quot;</span>
+    <span class="k">if</span> <span class="n">delete</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Deleting </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">output_dir</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">output_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;#!/bin/bash -l</span>
+<span class="s1">#SBATCH -p </span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">#SBATCH -J </span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">#SBATCH --array=1-</span><span class="si">%d%%%d</span><span class="s1"></span>
+<span class="s1">#SBATCH -n 1</span>
+<span class="s1">#SBATCH --ntasks=1</span>
+<span class="s1">#SBATCH --mem=4G</span>
+<span class="s1">#SBATCH -t 08:00:00</span>
+<span class="s1">#SBATCH -o </span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">.o</span><span class="si">%%</span><span class="s1">j</span>
+<span class="s1">####SBATCH -L project</span>
+<span class="s1">####SBATCH --qos=premium</span>
+<span class="s1">####SBATCH -A dessn</span>
+<span class="s1">##SBATCH --tasks-per-node=24</span>
+
+<span class="s1">IDIR=</span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">conda deactivate</span>
+<span class="s1">conda activate sam35</span>
+<span class="s1">echo $PATH</span>
+<span class="s1">echo &quot;Activated python&quot;</span>
+<span class="s1">executable=$(which python)</span>
+<span class="s1">echo $executable</span>
+
+<span class="s1">PROG=</span><span class="si">%s</span><span class="s1"></span>
+<span class="s1">PARAMS=`expr $</span><span class="si">{SLURM_ARRAY_TASK_ID}</span><span class="s1"> - 1`</span>
+<span class="s1">cd $IDIR</span>
+<span class="s1">sleep $((RANDOM </span><span class="si">%%</span><span class="s1"> 10))</span>
+<span class="s1">srun -N 1 -n 1 -c 1 $executable $PROG $PARAMS&#39;&#39;&#39;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">.q&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">executable</span><span class="p">[:</span><span class="n">executable</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;.py&quot;</span><span class="p">)])</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="p">(</span><span class="n">partition</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">num_tasks</span><span class="p">,</span> <span class="n">num_cpu</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">executable</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">partition</span> <span class="o">!=</span> <span class="s2">&quot;smp&quot;</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;####&quot;</span><span class="p">,</span> <span class="s2">&quot;#&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;SLURM Jobscript at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">n</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.framework.simulations.dispersion &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.framework.simulations.dispersion</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.framework.simulations.dispersion</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">binned_statistic</span>
+
+
+<div class="viewcode-block" id="get_data"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.dispersion.get_data">[docs]</a><span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="n">des</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;G10&quot;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Getting data for </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">((</span><span class="s2">&quot;DES&quot;</span> <span class="k">if</span> <span class="n">des</span> <span class="k">else</span> <span class="s2">&quot;LowZ&quot;</span><span class="p">),</span> <span class="n">model</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">des</span><span class="p">:</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="s2">&quot;snana_data/DES3YR_DES_BHMEFF_AM</span><span class="si">%s</span><span class="s2">/passed_0.npy&quot;</span> <span class="o">%</span> <span class="n">model</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="s2">&quot;snana_data/DES3YR_LOWZ_BHMEFF_</span><span class="si">%s</span><span class="s2">/passed_0.npy&quot;</span> <span class="o">%</span> <span class="n">model</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;z&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="s2">&quot;sim_mb&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">],</span>
+        <span class="s2">&quot;sim_x1&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">],</span>
+        <span class="s2">&quot;sim_c&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">],</span>
+        <span class="s2">&quot;mb&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">],</span>
+        <span class="s2">&quot;x1&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">7</span><span class="p">],</span>
+        <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">8</span><span class="p">],</span>
+        <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">6</span><span class="p">:</span><span class="mi">9</span><span class="p">],</span>
+        <span class="s2">&quot;sim&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span>
+        <span class="s2">&quot;cov&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">12</span><span class="p">:</span><span class="mi">12</span><span class="o">+</span><span class="mi">9</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">g10</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">des</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;G10&quot;</span><span class="p">)</span>
+    <span class="n">c11</span> <span class="o">=</span> <span class="n">get_data</span><span class="p">(</span><span class="n">des</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;C11&quot;</span><span class="p">)</span>
+
+    <span class="n">g10_diff</span> <span class="o">=</span> <span class="n">g10</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">g10</span><span class="p">[</span><span class="s2">&quot;sim&quot;</span><span class="p">]</span>
+    <span class="n">c11_diff</span> <span class="o">=</span> <span class="n">c11</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">c11</span><span class="p">[</span><span class="s2">&quot;sim&quot;</span><span class="p">]</span>
+
+    <span class="n">bine</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">g10_d_mb</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">g10</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">g10_diff</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+    <span class="n">g10_d_x1</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">g10</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">g10_diff</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+    <span class="n">g10_d_c</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span>  <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">g10</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">g10_diff</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+    <span class="n">c11_d_mb</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">c11</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">c11_diff</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+    <span class="n">c11_d_x1</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">c11</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">c11_diff</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+    <span class="n">c11_d_c</span><span class="p">,</span> <span class="n">bine</span><span class="p">,</span> <span class="n">_</span>  <span class="o">=</span> <span class="n">binned_statistic</span><span class="p">(</span><span class="n">c11</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">c11_diff</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bine</span><span class="p">)</span>
+    <span class="n">binc</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bine</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bine</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Bias amount (100ths of a mag)&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bc</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">binc</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%5.3f</span><span class="s2"> | </span><span class="si">%6.3f</span><span class="s2"> </span><span class="si">%6.3f</span><span class="s2"> | </span><span class="si">%6.3f</span><span class="s2"> </span><span class="si">%6.3f</span><span class="s2"> | </span><span class="si">%6.3f</span><span class="s2"> </span><span class="si">%6.3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bc</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">g10_d_mb</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">c11_d_mb</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">100</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">g10_d_x1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">100</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">c11_d_x1</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">100</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">g10_d_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="mi">100</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">c11_d_c</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+    <span class="c1"># import matplotlib.pyplot as plt</span>
+    <span class="c1"># plt.scatter(c11[&quot;z&quot;], c11[&quot;c&quot;], s=1, c=&#39;r&#39;, alpha=0.5)</span>
+    <span class="c1"># plt.scatter(c11[&quot;z&quot;], c11[&quot;sim_c&quot;], s=1, c=&#39;k&#39;, alpha=0.5)</span>
+    <span class="c1"># plt.hist(c11[&quot;c&quot;], 50, histtype=&quot;step&quot;)</span>
+    <span class="c1"># plt.hist(c11[&quot;sim_c&quot;], 50, histtype=&quot;step&quot;)</span>
+    <span class="c1"># plt.show()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Diff&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">g10_diff</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">c11_diff</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">g10_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">g10_diff</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">c11_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">c11_diff</span><span class="p">,</span> <span class="n">rowvar</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calced Cov&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">g10_cov</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">c11_cov</span><span class="p">)</span>
+
+    <span class="n">g10_cov_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">g10</span><span class="p">[</span><span class="s2">&quot;cov&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">c11_cov_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">c11</span><span class="p">[</span><span class="s2">&quot;cov&quot;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Mean cov&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">g10_cov_mean</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">c11_cov_mean</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

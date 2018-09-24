@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.framework.bias_test &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.framework.bias_test</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.framework.bias_test</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">minimize</span>
+<span class="kn">from</span> <span class="nn">dessn.framework.simulations.snana</span> <span class="k">import</span> <span class="n">SNANASimulation</span>
+
+
+<div class="viewcode-block" id="investigate_color"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.bias_test.investigate_color">[docs]</a><span class="k">def</span> <span class="nf">investigate_color</span><span class="p">(</span><span class="n">sim_names</span><span class="p">):</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sim_names</span><span class="p">:</span>
+        <span class="n">simulation</span> <span class="o">=</span> <span class="n">SNANASimulation</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">data_all</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">get_passed_supernova</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;redshifts&quot;</span><span class="p">]</span>
+        <span class="n">meanz</span> <span class="o">=</span> <span class="n">zs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">below</span> <span class="o">=</span> <span class="n">zs</span> <span class="o">&lt;</span> <span class="n">meanz</span>
+        <span class="n">s_cs</span> <span class="o">=</span> <span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;sim_colours&quot;</span><span class="p">]</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;obs_mBx1c&quot;</span><span class="p">]</span>
+        <span class="n">sigma_cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;obs_mBx1c_cov&quot;</span><span class="p">][:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obs</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">cs</span> <span class="o">-</span> <span class="n">s_cs</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="n">below</span><span class="p">]</span> <span class="o">/</span> <span class="n">sigma_cs</span><span class="p">[</span><span class="n">below</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">histtype</span><span class="o">=</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;DES3YR_DES_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; z&lt;</span><span class="si">%0.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">meanz</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">diff</span><span class="p">[</span><span class="o">~</span><span class="n">below</span><span class="p">]</span> <span class="o">/</span> <span class="n">sigma_cs</span><span class="p">[</span><span class="o">~</span><span class="n">below</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="n">histtype</span><span class="o">=</span><span class="s1">&#39;step&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;DES3YR_DES_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot; z&gt;</span><span class="si">%0.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">meanz</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">bins</span><span class="p">))</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="fit_colour_error"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.bias_test.fit_colour_error">[docs]</a><span class="k">def</span> <span class="nf">fit_colour_error</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+    <span class="n">cmaps</span> <span class="o">=</span> <span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="s2">&quot;magma&quot;</span><span class="p">,</span> <span class="s2">&quot;jet&quot;</span>
+    <span class="k">for</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cmaps</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+        <span class="n">simulation</span> <span class="o">=</span> <span class="n">SNANASimulation</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">data_all</span> <span class="o">=</span> <span class="n">simulation</span><span class="o">.</span><span class="n">get_passed_supernova</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;redshifts&quot;</span><span class="p">]</span>
+        <span class="n">num_z_bins</span> <span class="o">=</span> <span class="mi">50</span>
+        <span class="n">z_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">zs</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">zs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">*</span><span class="mf">0.999</span><span class="p">,</span> <span class="n">num_z_bins</span><span class="p">)</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">digitize</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">z_bins</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">s_cs</span> <span class="o">=</span> <span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;sim_colours&quot;</span><span class="p">]</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;obs_mBx1c&quot;</span><span class="p">]</span>
+        <span class="n">sigma_cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">data_all</span><span class="p">[</span><span class="s2">&quot;obs_mBx1c_cov&quot;</span><span class="p">][:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">cs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obs</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">cs</span> <span class="o">-</span> <span class="n">s_cs</span>
+        <span class="n">pull</span> <span class="o">=</span> <span class="n">diff</span> <span class="o">/</span> <span class="n">sigma_cs</span>
+
+        <span class="n">zs</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">z_bins</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">z_bins</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">datasets</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">[</span><span class="n">indexes</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">sigma_cs</span><span class="p">[</span><span class="n">indexes</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_z_bins</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="c1"># datasets = [pull[indexes == i] for i in range(num_z_bins - 1)]</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">])</span>
+        <span class="c1"># ys = np.array([np.std(d) - 0.75 for d in datasets])</span>
+        <span class="n">uncert</span> <span class="o">=</span> <span class="mf">0.001</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">ys</span><span class="p">)])</span>
+
+        <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="n">k0</span><span class="p">,</span> <span class="n">k1</span> <span class="o">=</span> <span class="n">k</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">k0</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">zs</span> <span class="o">*</span> <span class="n">k1</span><span class="p">)</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="p">((</span><span class="n">ys</span> <span class="o">-</span> <span class="n">vals</span><span class="p">)</span> <span class="o">/</span> <span class="n">uncert</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            <span class="k">return</span> <span class="n">diff</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+        <span class="n">fit_val</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]))</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">fit_val</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="n">xs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">xs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">zs</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">fit_val</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span><span class="n">zs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">yerr</span><span class="o">=</span><span class="n">uncert</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="c1">#</span>
+        <span class="c1"># def test_kappa(k0, k1):</span>
+        <span class="c1">#     ratio = k0 + k1 * zs</span>
+        <span class="c1">#     pull2 = pull / ratio</span>
+        <span class="c1">#     return stds</span>
+        <span class="c1">#</span>
+        <span class="c1"># xx, yy = np.meshgrid(np.linspace(1, 2, 30), np.linspace(0, 1, 30), indexing=&#39;ij&#39;)</span>
+        <span class="c1"># zz = test_kappa(xx, yy)</span>
+        <span class="c1"># levels = np.linspace(0, 0.5, 30)</span>
+        <span class="c1"># cc = plt.contour(xx, yy, zz, levels=levels, cmap=cmap)</span>
+        <span class="c1"># plt.clabel(cc, inline=1)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># sim_names = [&quot;DES3YR_DES_SAMTEST_MAGSMEAR&quot;, &quot;DES3YR_DES_BULK_G10_SKEW&quot;, &quot;DES3YR_DES_BULK_C11_SKEW&quot;]</span>
+    <span class="c1"># sim_names = [&quot;DES3YR_DES_SAMTEST_MAGSMEAR&quot;]</span>
+    <span class="n">sim_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;DES3YR_DES_BHMEFF_AMG10&quot;</span><span class="p">,</span> <span class="s2">&quot;DES3YR_DES_BHMEFF_AMC11&quot;</span><span class="p">]</span>
+    <span class="c1"># sim_names = [&quot;DES3YR_LOWZ_BHMEFF_G10&quot;, &quot;DES3YR_LOWZ_BHMEFF_C11&quot;]</span>
+    <span class="c1"># investigate_color(sim_names)</span>
+    <span class="n">fit_colour_error</span><span class="p">(</span><span class="n">sim_names</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

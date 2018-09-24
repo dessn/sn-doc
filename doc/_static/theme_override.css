@@ -1,0 +1,86 @@
+.wy-nav-top {
+    background-color: #DC3535 !important;
+}
+.wy-side-nav-search {
+    background-color: #DC3535 !important;
+}
+.wy-nav-content {
+    max-width: 1200px !important;
+}
+.wy-nav-side {
+    box-shadow: 0px 0px 15px 0px #444444;
+}
+
+table.borderless {
+    border: none !important;
+}
+
+table.borderless td {
+    background-color: transparent !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    border-right: none !important;
+}
+
+.bounding img {
+    padding: 5px;
+}
+
+table.borderless p {
+    text-align: center;
+}
+
+.wy-table-responsive {
+    overflow: auto !important;
+}
+
+.rst-content .green.note .admonition-title {
+    background: #55c764 !important;
+}
+.rst-content .green.note .math.note {
+    background: #dbffd9;
+}
+.rst-content .warning.admonition .admonition-title {
+    background: #f0b37e !important;
+}
+
+.rst-content .warning.admonition .math.note {
+    background: #ffebc3;
+}
+
+.rst-content .green.note {
+    background: #dbffd9 !important;
+}
+
+.math .eqno {
+    float: right;
+    margin-top: 5px;
+    font-family: serif;
+    font-size: 1.2em;
+}
+
+.toggle.admonition .admonition-title {
+    display: block;
+    clear: both;
+}
+
+.toggle.admonition .admonition-title:after {
+    content: " ▼";
+}
+
+.toggle.admonition .admonition-title.open:after {
+    content: " ▲";
+}
+
+.toggle.admonition {
+    padding: 0 12px;
+}
+.toggle.admonition .admonition-title {
+    background: #dfeaf1;
+    color: #404040;
+}
+
+.toggle.admonition.open {
+    padding: 12px;
+}

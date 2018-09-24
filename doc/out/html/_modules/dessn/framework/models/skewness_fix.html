@@ -1,0 +1,332 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.framework.models.skewness_fix &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.framework.models.skewness_fix</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.framework.models.skewness_fix</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Dec 29 20:44:13 2017</span>
+
+<span class="sd">@author: shint1</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">norm</span><span class="p">,</span> <span class="n">skewnorm</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="k">import</span> <span class="n">simps</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="k">import</span> <span class="n">gaussian_filter</span>
+<span class="kn">from</span> <span class="nn">astropy.cosmology</span> <span class="k">import</span> <span class="n">wCDM</span>
+
+
+<div class="viewcode-block" id="get_selection_cdf"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.skewness_fix.get_selection_cdf">[docs]</a><span class="k">def</span> <span class="nf">get_selection_cdf</span><span class="p">(</span><span class="n">mbs</span><span class="p">,</span> <span class="n">vals</span><span class="p">):</span>
+    <span class="n">mean</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">normv</span> <span class="o">=</span> <span class="n">vals</span>
+    <span class="k">return</span> <span class="n">normv</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">mbs</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">sigma</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_selection_skewnorm"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.skewness_fix.get_selection_skewnorm">[docs]</a><span class="k">def</span> <span class="nf">get_selection_skewnorm</span><span class="p">(</span><span class="n">mbs</span><span class="p">,</span> <span class="n">vals</span><span class="p">):</span>
+    <span class="n">mean</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">normv</span> <span class="o">=</span> <span class="n">vals</span>
+    <span class="k">return</span> <span class="n">normv</span> <span class="o">*</span> <span class="n">skewnorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">mbs</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">sigma</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_approx_efficiency"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.skewness_fix.get_approx_efficiency">[docs]</a><span class="k">def</span> <span class="nf">get_approx_efficiency</span><span class="p">(</span><span class="n">dist_mod</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">correction_skewnorm</span><span class="p">,</span> <span class="n">alpha_shift</span><span class="p">,</span> <span class="n">frac_shift</span><span class="p">,</span> <span class="n">frac_shift2</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">40000</span>
+    <span class="n">MBs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=-</span><span class="mf">19.365</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">x1s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">alpha_shift</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">alpha_shift</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">mean_shift</span> <span class="o">=</span> <span class="n">frac_shift</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="n">kurtosis_c</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">delta</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">sigma_c_adjust_ratio</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">kurtosis_c</span> <span class="o">/</span> <span class="mf">0.1</span> <span class="o">**</span> <span class="mi">4</span><span class="p">))</span> <span class="o">**</span> <span class="mf">0.25</span>
+    <span class="n">sigma_shift</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">frac_shift2</span> <span class="o">*</span> <span class="p">(</span><span class="n">sigma_c_adjust_ratio</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">cs</span> <span class="o">=</span> <span class="n">skewnorm</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">mean_shift</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">sigma_shift</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="n">alphax1</span> <span class="o">=</span> <span class="mf">0.14</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="mf">3.1</span>
+    <span class="n">mbs</span> <span class="o">=</span> <span class="n">MBs</span> <span class="o">+</span> <span class="n">dist_mod</span> <span class="o">+</span> <span class="n">alphax1</span> <span class="o">*</span> <span class="n">x1s</span> <span class="o">-</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">cs</span>
+
+    <span class="n">hist</span><span class="p">,</span> <span class="n">bin_edge</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">mbs</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">normed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">hist2</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+    <span class="n">bin_center</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">bin_edge</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">bin_edge</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">correction_skewnorm</span><span class="p">:</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">get_selection_skewnorm</span><span class="p">(</span><span class="n">bin_center</span><span class="p">,</span> <span class="n">vals</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ratio</span> <span class="o">=</span> <span class="n">get_selection_cdf</span><span class="p">(</span><span class="n">bin_center</span><span class="p">,</span> <span class="n">vals</span><span class="p">)</span>
+
+    <span class="n">area1</span> <span class="o">=</span> <span class="n">simps</span><span class="p">(</span><span class="n">hist2</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">bin_center</span><span class="p">)</span>
+    <span class="n">effective</span> <span class="o">=</span> <span class="n">ratio</span> <span class="o">*</span> <span class="n">hist2</span>
+    <span class="n">area2</span> <span class="o">=</span> <span class="n">simps</span><span class="p">(</span><span class="n">effective</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">bin_center</span><span class="p">)</span>
+
+    <span class="c1"># import matplotlib.pyplot as plt</span>
+    <span class="c1"># plt.plot(bin_center, hist2, ls=&quot;--&quot;)</span>
+    <span class="c1"># plt.plot(bin_center, ratio, ls=&quot;-&quot;)</span>
+    <span class="c1"># plt.plot(bin_center, effective, ls=&quot;:&quot;)</span>
+
+    <span class="k">return</span> <span class="n">area2</span> <span class="o">/</span> <span class="n">area1</span></div>
+
+
+<div class="viewcode-block" id="get_shift_scale"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.skewness_fix.get_shift_scale">[docs]</a><span class="k">def</span> <span class="nf">get_shift_scale</span><span class="p">(</span><span class="n">redshifts</span><span class="p">,</span> <span class="n">correction_skewnorm</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">frac_shift</span><span class="p">,</span> <span class="n">frac_shift2</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Getting shift scale&quot;</span><span class="p">,</span> <span class="n">correction_skewnorm</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">redshifts</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="n">cosmo</span> <span class="o">=</span> <span class="n">wCDM</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">)</span>
+
+    <span class="n">dist_mod</span> <span class="o">=</span> <span class="n">cosmo</span><span class="o">.</span><span class="n">distmod</span><span class="p">(</span><span class="n">redshifts</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="n">biases</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+        <span class="n">alphas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">alphas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">alpha</span> <span class="ow">in</span> <span class="n">alphas</span><span class="p">:</span>
+        <span class="n">bias_actual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">get_approx_efficiency</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">correction_skewnorm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">dist_mod</span><span class="p">])</span>
+        <span class="n">bias_computed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">get_approx_efficiency</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">correction_skewnorm</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">frac_shift</span><span class="p">,</span> <span class="n">frac_shift2</span><span class="p">)</span> <span class="k">for</span> <span class="n">dm</span> <span class="ow">in</span> <span class="n">dist_mod</span><span class="p">])</span>
+
+        <span class="n">bias_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">bias_actual</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">bias_computed</span><span class="p">)</span>
+        <span class="n">total_bias</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bias_diff</span><span class="p">)</span>
+        <span class="n">biases</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">total_bias</span><span class="p">)</span>
+
+    <span class="n">biases</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">biases</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">biases</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">biases</span><span class="p">)</span>
+
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">alphas</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">alphas</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">fn</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">fn</span>
+        <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">alphas</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">func</span> <span class="o">-=</span> <span class="n">func</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alphas</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">alphas</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">scale</span></div>
+
+
+
+
+
+
+
+
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.framework.simulations.simple &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.framework.simulations.simple</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.framework.simulations.simple</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">astropy.cosmology</span> <span class="k">import</span> <span class="n">FlatwCDM</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="k">import</span> <span class="n">norm</span><span class="p">,</span> <span class="n">multivariate_normal</span><span class="p">,</span> <span class="n">skewnorm</span>
+
+<span class="kn">from</span> <span class="nn">dessn.framework.simulation</span> <span class="k">import</span> <span class="n">Simulation</span>
+
+
+<div class="viewcode-block" id="SimpleSimulation"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.simple.SimpleSimulation">[docs]</a><span class="k">class</span> <span class="nc">SimpleSimulation</span><span class="p">(</span><span class="n">Simulation</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_supernova</span><span class="p">,</span> <span class="n">dscale</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">alpha_c</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">lowz</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_prob_ia</span><span class="o">=</span><span class="mf">0.9999999</span><span class="p">,</span>
+                 <span class="n">disable_selection</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">kappa0</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">kappa1</span><span class="o">=</span><span class="mf">0.03</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha_c</span> <span class="o">=</span> <span class="n">alpha_c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dscale</span> <span class="o">=</span> <span class="n">dscale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_prob_ia</span> <span class="o">=</span> <span class="n">min_prob_ia</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disable_selection</span> <span class="o">=</span> <span class="n">disable_selection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kappa0</span> <span class="o">=</span> <span class="n">kappa0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kappa1</span> <span class="o">=</span> <span class="n">kappa1</span>
+        <span class="k">if</span> <span class="n">lowz</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">skewnorm</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mb_alpha</span> <span class="o">=</span> <span class="mf">5.87</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mb_mean</span> <span class="o">=</span> <span class="mf">13.72</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mb_width</span> <span class="o">=</span> <span class="mf">1.35</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_z_gen</span> <span class="o">=</span> <span class="mf">0.01</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_z_gen</span> <span class="o">=</span> <span class="mf">0.0004</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">skewnorm</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mb_alpha</span> <span class="o">=</span> <span class="mi">4</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mb_mean</span> <span class="o">=</span> <span class="mf">23.14</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mb_width</span> <span class="o">=</span> <span class="mf">0.5</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="mf">0.3</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_z_gen</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min_z_gen</span> <span class="o">=</span> <span class="mf">0.008</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mass_scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">mass</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span> <span class="o">=</span> <span class="n">num_nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_supernova</span> <span class="o">=</span> <span class="n">num_supernova</span>
+
+<div class="viewcode-block" id="SimpleSimulation.get_name"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.simple.SimpleSimulation.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;simple&quot;</span></div>
+
+<div class="viewcode-block" id="SimpleSimulation.get_truth_values"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.simple.SimpleSimulation.get_truth_values">[docs]</a>    <span class="k">def</span> <span class="nf">get_truth_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;Om&quot;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Omega_m$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Ol&quot;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Omega_\Lambda$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$w$&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="mf">0.14</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;delta_alpha&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta_\alpha$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="mf">3.1</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\beta$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;delta_beta&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta_\beta$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_MB&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">19.365</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\langle M_B \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;outlier_MB_delta&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta M_B$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;outlier_dispersion&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]),</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_{\rm out}^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_x1&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\langle x_1^{</span><span class="si">%d</span><span class="s2">} \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_c&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_nodes</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\langle c^{</span><span class="si">%d</span><span class="s2">} \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_MB&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_{\rm m_B}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_x1&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_</span><span class="si">{x_1}</span><span class="s2">$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_c&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_c$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;log_sigma_MB&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\log\sigma_{\rm m_B}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;log_sigma_x1&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\log\sigma_</span><span class="si">{x_1}</span><span class="s2">$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;log_sigma_c&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\log\sigma_c$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;kappa_c0&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa0</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\kappa_</span><span class="si">{c0}</span><span class="s2">&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;kappa_c1&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa1</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\kappa_</span><span class="si">{c1}</span><span class="s2">&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha_c&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha_c</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha_c$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;dscale&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dscale</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta(0)$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;dratio&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta(\infty)/\delta(0)$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;intrinsic_correlation&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\rho$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;calibration&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\delta \mathcal</span><span class="si">{Z}</span><span class="s2">_</span><span class="si">%d</span><span class="s2">$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;deltas&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="sa">r</span><span class="s2">&quot;$\Delta_{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">)</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="SimpleSimulation.get_systematic_labels"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.simple.SimpleSimulation.get_systematic_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_systematic_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span></div>
+
+<div class="viewcode-block" id="SimpleSimulation.get_all_supernova"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.simple.SimpleSimulation.get_all_supernova">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_supernova</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_sne</span><span class="p">,</span> <span class="n">cosmology_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">truth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_truth_values_dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating simple data for </span><span class="si">%d</span><span class="s2"> supernova, with skewness </span><span class="si">%d</span><span class="s2">...&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n_sne</span><span class="p">,</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;alpha_c&quot;</span><span class="p">]))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">cosmology_index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Generating for cosmology index </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">cosmology_index</span><span class="p">)</span>
+        <span class="n">cosmology</span> <span class="o">=</span> <span class="n">FlatwCDM</span><span class="p">(</span><span class="mf">70.0</span><span class="p">,</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;Om&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Unwrap some values</span>
+        <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">dscale</span><span class="p">,</span> <span class="n">dratio</span> <span class="o">=</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;dscale&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;dratio&quot;</span><span class="p">]</span>
+        <span class="n">sim_mBx1c</span><span class="p">,</span> <span class="n">obs_mBx1c_cov</span><span class="p">,</span> <span class="n">obs_mBx1c</span><span class="p">,</span> <span class="n">deta_dcalib</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">redshifts_all</span><span class="p">,</span> <span class="n">redshift_pre_comp_all</span><span class="p">,</span> <span class="n">p_high_masses_all</span><span class="p">,</span> <span class="n">mask_all</span><span class="p">,</span> <span class="n">mbs_all</span><span class="p">,</span>  <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">ia_probs_all</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sim_x1s_all</span><span class="p">,</span> <span class="n">sim_cs_all</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="c1"># Assume constant population.</span>
+        <span class="n">means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">truth</span><span class="p">[</span><span class="s2">&quot;mean_MB&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;mean_x1&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;mean_c&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+        <span class="n">sigmas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">truth</span><span class="p">[</span><span class="s2">&quot;sigma_MB&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;sigma_x1&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;sigma_c&quot;</span><span class="p">]])</span>
+        <span class="n">sigmas_mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sigmas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">sigmas</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="n">correlations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">truth</span><span class="p">[</span><span class="s2">&quot;intrinsic_correlation&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;intrinsic_correlation&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">pop_cov</span> <span class="o">=</span> <span class="n">correlations</span> <span class="o">*</span> <span class="n">sigmas_mat</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">outlier_MB_delta</span><span class="p">,</span> <span class="n">outlier_dispersion</span> <span class="o">=</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;outlier_MB_delta&quot;</span><span class="p">],</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;outlier_dispersion&quot;</span><span class="p">]</span>
+        <span class="n">nn</span> <span class="o">=</span> <span class="mi">2000</span>
+        <span class="c1"># Generate 1000 at a time</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">redshifts</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_z_gen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_z_gen</span><span class="p">,</span> <span class="n">nn</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">)</span>
+            <span class="n">dist_mod</span> <span class="o">=</span> <span class="n">cosmology</span><span class="o">.</span><span class="n">distmod</span><span class="p">(</span><span class="n">redshifts</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">redshift_pre_comp</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.95</span> <span class="o">*</span> <span class="n">redshifts</span><span class="p">)</span>
+            <span class="n">p_high_masses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">dist_mod</span><span class="o">.</span><span class="n">size</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass_scale</span>
+            <span class="n">ia_probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_prob_ia</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">nn</span><span class="p">)</span>
+            <span class="n">contaminations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">nn</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">ia_probs</span>
+            <span class="k">for</span> <span class="n">zz</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">contamination</span><span class="p">,</span> <span class="n">red</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">redshift_pre_comp</span><span class="p">,</span> <span class="n">dist_mod</span><span class="p">,</span> <span class="n">p_high_masses</span><span class="p">,</span> <span class="n">contaminations</span><span class="p">,</span> <span class="n">redshifts</span><span class="p">):</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">MB</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">(</span><span class="n">means</span><span class="p">,</span> <span class="n">pop_cov</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">truth</span><span class="p">[</span><span class="s2">&quot;alpha_c&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;mean_c&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;sigma_c&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">skew_prob</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">logcdf</span><span class="p">(</span><span class="n">truth</span><span class="p">[</span><span class="s2">&quot;alpha_c&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;mean_c&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;sigma_c&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="k">break</span>
+                <span class="n">probs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">multivariate_normal</span><span class="o">.</span><span class="n">logpdf</span><span class="p">([</span><span class="n">MB</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">c</span><span class="p">],</span> <span class="n">mean</span><span class="o">=</span><span class="n">means</span><span class="p">,</span> <span class="n">cov</span><span class="o">=</span><span class="n">pop_cov</span><span class="p">)</span> <span class="o">+</span> <span class="n">skew_prob</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">contamination</span><span class="p">:</span>
+                    <span class="n">MB</span> <span class="o">-=</span> <span class="n">outlier_MB_delta</span>
+                    <span class="n">adjust</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">outlier_dispersion</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">sigmas</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+                    <span class="n">MB</span> <span class="o">+=</span> <span class="n">adjust</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">x1</span> <span class="o">+=</span> <span class="n">adjust</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">c</span> <span class="o">+=</span> <span class="n">adjust</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+                <span class="n">mass_correction</span> <span class="o">=</span> <span class="n">dscale</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.9</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">dratio</span><span class="p">)</span> <span class="o">/</span> <span class="n">zz</span> <span class="o">+</span> <span class="n">dratio</span><span class="p">)</span>
+                <span class="n">mb</span> <span class="o">=</span> <span class="n">MB</span> <span class="o">+</span> <span class="n">mu</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">c</span> <span class="o">-</span> <span class="n">mass_correction</span> <span class="o">*</span> <span class="n">p</span>
+                <span class="n">vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mb</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">c</span><span class="p">])</span>
+                <span class="c1"># Add intrinsic scatter to the mix</span>
+                <span class="n">diag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+                <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">diag</span><span class="p">)</span>
+                <span class="n">obs_mBx1c_cov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+                <span class="n">sim_mBx1c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+                <span class="n">cov2</span> <span class="o">=</span> <span class="n">cov</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">cov2</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kappa0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">kappa1</span> <span class="o">*</span> <span class="n">red</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                <span class="n">vector</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multivariate_normal</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">cov2</span><span class="p">)</span>
+                <span class="n">obs_mBx1c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+                <span class="n">deta_dcalib</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span><span class="p">)))</span>
+            <span class="n">redshifts_all</span> <span class="o">+=</span> <span class="n">redshifts</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">redshift_pre_comp_all</span> <span class="o">+=</span> <span class="n">redshift_pre_comp</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">p_high_masses_all</span> <span class="o">+=</span> <span class="n">p_high_masses</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">ia_probs_all</span> <span class="o">+=</span> <span class="n">ia_probs</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="n">mbs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">o</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">sim_mBx1c</span><span class="p">[</span><span class="o">-</span><span class="n">nn</span><span class="p">:]])</span>
+            <span class="n">sim_x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">o</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">sim_mBx1c</span><span class="p">[</span><span class="o">-</span><span class="n">nn</span><span class="p">:]])</span>
+            <span class="n">sim_c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">o</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">sim_mBx1c</span><span class="p">[</span><span class="o">-</span><span class="n">nn</span><span class="p">:]])</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">mbs</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">disable_selection</span><span class="p">:</span>
+                <span class="n">pdfs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">mbs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">skewnorm</span><span class="p">:</span>
+                    <span class="n">pdfs</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">mbs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_width</span><span class="p">)</span>
+                    <span class="n">pdfs</span> <span class="o">/=</span> <span class="n">pdfs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pdfs</span> <span class="o">=</span> <span class="n">skewnorm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">mbs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_width</span><span class="p">)</span>
+                    <span class="n">pdfs</span> <span class="o">/=</span> <span class="n">pdfs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">vals</span> <span class="o">&lt;</span> <span class="n">pdfs</span>
+            <span class="n">mbs_all</span> <span class="o">+=</span> <span class="n">mbs</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">sim_x1s_all</span> <span class="o">+=</span> <span class="n">sim_x1</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">sim_cs_all</span> <span class="o">+=</span> <span class="n">sim_c</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">mask_all</span> <span class="o">+=</span> <span class="n">mask</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Have </span><span class="si">%d</span><span class="s2"> passed out of required </span><span class="si">%d</span><span class="s2"> sne, generated </span><span class="si">%d</span><span class="s2">&quot;</span>
+                              <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask_all</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">n_sne</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">mask_all</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask_all</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">n_sne</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask_all</span><span class="p">)</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+        <span class="n">cut_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indexes</span> <span class="o">==</span> <span class="n">n_sne</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">mask_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask_all</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Generated </span><span class="si">%d</span><span class="s2"> objects out of </span><span class="si">%d</span><span class="s2"> passed, </span><span class="si">%d</span><span class="s2"> percent&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mask_all</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">mask_all</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">mask_all</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">mask_all</span><span class="o">.</span><span class="n">size</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;n_sne&quot;</span><span class="p">:</span> <span class="n">n_sne</span><span class="p">,</span>
+            <span class="s2">&quot;obs_mBx1c&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obs_mBx1c</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;obs_mBx1c_cov&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">obs_mBx1c_cov</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;deta_dcalib&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">deta_dcalib</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;redshifts&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">redshifts_all</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;shift_deltas&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">cut_index</span><span class="p">),</span>
+            <span class="s2">&quot;masses&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p_high_masses_all</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;existing_prob&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">probs</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;sim_apparents&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mbs_all</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;sim_stretches&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sim_x1s_all</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;sim_colours&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sim_cs_all</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mask_all</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">]),</span>
+            <span class="s2">&quot;prob_ia&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ia_probs_all</span><span class="p">[:</span><span class="n">cut_index</span><span class="p">])</span>
+        <span class="p">}</span></div>
+
+<div class="viewcode-block" id="SimpleSimulation.get_approximate_correction"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.simple.SimpleSimulation.get_approximate_correction">[docs]</a>    <span class="k">def</span> <span class="nf">get_approximate_correction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">skewnorm</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ccdf approx&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">mb_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_width</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span> <span class="mf">0.0001</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;skewnorm approx&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">mb_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mb_alpha</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),</span> <span class="mf">0.0001</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="SimpleSimulation.get_systematic_names"><a class="viewcode-back" href="../../../../dessn.framework.simulations.html#dessn.framework.simulations.simple.SimpleSimulation.get_systematic_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_systematic_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;{</span><span class="si">%d</span><span class="s2">}&quot;</span> <span class="o">%</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_calib</span><span class="p">)]</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

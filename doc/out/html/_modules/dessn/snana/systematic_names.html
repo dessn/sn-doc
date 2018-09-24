@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.snana.systematic_names &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.snana.systematic_names</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.snana.systematic_names</h1><div class="highlight"><pre>
+<span></span>
+<div class="viewcode-block" id="get_systematic_mapping"><a class="viewcode-back" href="../../../dessn.snana.html#dessn.snana.systematic_names.get_systematic_mapping">[docs]</a><span class="k">def</span> <span class="nf">get_systematic_mapping</span><span class="p">():</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;HST_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm HST Calib}&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;VPEC&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;v_{\rm pec}&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT20_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_0&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT21_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT22_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT23_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_3&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT24_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT25_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_5&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT26_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_6&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT27_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_7&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT28_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_8&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SALT29_cal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm SALT}_9&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;MWEBV&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm MWE}_{B-V}&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;SF2011-MWEBV&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm MWE Model}&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Fitz99ColorLaw&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm MWE ColorLaw}&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;OD94ColorLaw&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm MWE ColorLaw}&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;REDSHIFT_BIAS&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm \delta z }&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;zshift&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;{\rm \delta z }&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_ZP_g_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta g&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_ZP_r_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta r&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_ZP_i_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta i&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_ZP_z_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta z&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_wave_g_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_g&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_wave_r_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_r&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_wave_i_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_i&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;DES_wave_z_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_z&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_ZP_t_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta t&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_ZP_y_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta y&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_ZP_z_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta Z&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_ZP_A_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta A&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_ZP_u_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta u&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_ZP_v_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta v&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_ZP_gl_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta gl&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_ZP_hm_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta hm&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_ZP_in_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta in&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_ZP_jo_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta jo&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_ZP_p_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta p&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_ZP_q_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta q&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_ZP_r_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta R&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_ZP_s_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta s&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_ZP_b_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta b&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_ZP_c_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta c&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_ZP_d_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta d&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_ZP_e_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta e&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_ZP_CH_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta CH&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_ZP_DI_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta DI&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_ZP_EJ_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta EJ&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_ZP_FK_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta FK&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_wave_t_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{t}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_wave_y_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{y}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_wave_z_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_wave_A_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{A}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_wave_u_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{u}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CSP_wave_v_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{v}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_WAVE_gl_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{gl}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_WAVE_hm_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{hm}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_WAVE_in_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{in}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAK_WAVE_jo_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{jo}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_WAVE_p_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{p}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_WAVE_q_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{q}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_WAVE_r_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{r}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAF_WAVE_s_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{s}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_WAVE_b_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{b}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_WAVE_c_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{c}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_WAVE_d_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{d}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAS_WAVE_e_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{e}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_wave_CH_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{CH}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_wave_DI_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{DI}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_wave_EJ_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{EJ}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;CFAO_wave_FK_survcal&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;\Delta \lambda_</span><span class="si">{FK}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

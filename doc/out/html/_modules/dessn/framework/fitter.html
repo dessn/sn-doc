@@ -1,0 +1,481 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.framework.fitter &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.framework.fitter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.framework.fitter</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="kn">from</span> <span class="nn">dessn.utility.doJob</span> <span class="k">import</span> <span class="n">write_jobscript_slurm</span>
+
+
+<div class="viewcode-block" id="Fitter"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter">[docs]</a><span class="k">class</span> <span class="nc">Fitter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temp_dir</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cosmologies</span> <span class="o">=</span> <span class="mi">30</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_walkers</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cpu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cosmologies</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_walkers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span> <span class="o">=</span> <span class="n">temp_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_steps</span> <span class="o">=</span> <span class="mi">3000</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fitter.set_models"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.set_models">[docs]</a>    <span class="k">def</span> <span class="nf">set_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">models</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">models</span> <span class="o">=</span> <span class="n">models</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Fitter.set_max_steps"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.set_max_steps">[docs]</a>    <span class="k">def</span> <span class="nf">set_max_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_steps</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_steps</span> <span class="o">=</span> <span class="n">max_steps</span></div>
+
+<div class="viewcode-block" id="Fitter.set_simulations"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.set_simulations">[docs]</a>    <span class="k">def</span> <span class="nf">set_simulations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">simulations</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulations</span> <span class="o">=</span> <span class="n">simulations</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Fitter.set_num_cosmologies"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.set_num_cosmologies">[docs]</a>    <span class="k">def</span> <span class="nf">set_num_cosmologies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_cosmologies</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_cosmologies</span> <span class="o">=</span> <span class="n">num_cosmologies</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Fitter.set_num_cpu"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.set_num_cpu">[docs]</a>    <span class="k">def</span> <span class="nf">set_num_cpu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_cpu</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">num_cpu</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_cpu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cosmologies</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_walkers</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_cpu</span> <span class="o">=</span> <span class="n">num_cpu</span></div>
+
+<div class="viewcode-block" id="Fitter.set_num_walkers"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.set_num_walkers">[docs]</a>    <span class="k">def</span> <span class="nf">set_num_walkers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_walkers</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_walkers</span> <span class="o">=</span> <span class="n">num_walkers</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Fitter.get_num_jobs"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.get_num_jobs">[docs]</a>    <span class="k">def</span> <span class="nf">get_num_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">num_jobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cosmologies</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_walkers</span>
+        <span class="k">return</span> <span class="n">num_jobs</span></div>
+
+<div class="viewcode-block" id="Fitter.get_indexes_from_index"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.get_indexes_from_index">[docs]</a>    <span class="k">def</span> <span class="nf">get_indexes_from_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">num_simulations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="p">)</span>
+        <span class="n">num_cosmo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cosmologies</span>
+        <span class="n">num_walkers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_walkers</span>
+
+        <span class="n">num_per_model_sim</span> <span class="o">=</span> <span class="n">num_cosmo</span> <span class="o">*</span> <span class="n">num_walkers</span>
+        <span class="n">num_per_model</span> <span class="o">=</span> <span class="n">num_simulations</span> <span class="o">*</span> <span class="n">num_per_model_sim</span>
+
+        <span class="n">model_index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">//</span> <span class="n">num_per_model</span>
+        <span class="n">index</span> <span class="o">-=</span> <span class="n">model_index</span> <span class="o">*</span> <span class="n">num_per_model</span>
+        <span class="n">sim_index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">//</span> <span class="n">num_per_model_sim</span>
+        <span class="n">index</span> <span class="o">-=</span> <span class="n">sim_index</span> <span class="o">*</span> <span class="n">num_per_model_sim</span>
+        <span class="n">cosmo_index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">//</span> <span class="n">num_walkers</span>
+        <span class="n">walker_index</span> <span class="o">=</span> <span class="n">index</span> <span class="o">%</span> <span class="n">num_walkers</span>
+
+        <span class="k">return</span> <span class="n">model_index</span><span class="p">,</span> <span class="n">sim_index</span><span class="p">,</span> <span class="n">cosmo_index</span><span class="p">,</span> <span class="n">walker_index</span></div>
+
+<div class="viewcode-block" id="Fitter.run_fit"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.run_fit">[docs]</a>    <span class="k">def</span> <span class="nf">run_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_index</span><span class="p">,</span> <span class="n">simulation_index</span><span class="p">,</span> <span class="n">cosmo_index</span><span class="p">,</span> <span class="n">walker_index</span><span class="p">,</span> <span class="n">num_cores</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_index</span><span class="p">]</span>
+        <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="p">[</span><span class="n">simulation_index</span><span class="p">]</span>
+
+        <span class="n">out_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span> <span class="o">+</span> <span class="s2">&quot;/stan_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">_</span><span class="si">%d</span><span class="s2">.pkl&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">model_index</span><span class="p">,</span> <span class="n">simulation_index</span><span class="p">,</span> <span class="n">cosmo_index</span><span class="p">,</span> <span class="n">walker_index</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_cores</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">w</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_steps</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">w</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">1000</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">cosmo_index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running Stan job, saving to </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">out_file</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">pystan</span>
+        <span class="n">sm</span> <span class="o">=</span> <span class="n">pystan</span><span class="o">.</span><span class="n">StanModel</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">get_stan_file</span><span class="p">(),</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;Cosmology&quot;</span><span class="p">)</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">sampling</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="nb">iter</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">warmup</span><span class="o">=</span><span class="n">w</span><span class="p">,</span> <span class="n">chains</span><span class="o">=</span><span class="n">num_cores</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">get_init_wrapped</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stan finished sampling&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get parameters</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">get_parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">sim</span><span class="p">[</span><span class="s2">&quot;pars_oi&quot;</span><span class="p">]]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SAVING parameters:&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;weight&quot;</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">sim</span><span class="p">[</span><span class="s2">&quot;pars_oi&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found weight to save&quot;</span><span class="p">)</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;posterior&quot;</span> <span class="ow">in</span> <span class="n">fit</span><span class="o">.</span><span class="n">sim</span><span class="p">[</span><span class="s2">&quot;pars_oi&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Found posterior to save&quot;</span><span class="p">)</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;posterior&quot;</span><span class="p">)</span>
+        <span class="n">dictionary</span> <span class="o">=</span> <span class="n">fit</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">pars</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="c1"># Turn log scale parameters into normal scale to see them easier</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;log_&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">4</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                <span class="k">del</span> <span class="n">dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="c1"># Correct the chains if there is a weight function</span>
+        <span class="n">dictionary</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">correct_chain</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">sim</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saved chain to </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">out_file</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Fitter.is_laptop"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.is_laptop">[docs]</a>    <span class="k">def</span> <span class="nf">is_laptop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;science&quot;</span> <span class="ow">in</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Fitter.fit"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+
+        <span class="n">num_jobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_num_jobs</span><span class="p">()</span>
+        <span class="n">num_models</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
+        <span class="n">num_simulations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;With </span><span class="si">%d</span><span class="s2"> models, </span><span class="si">%d</span><span class="s2"> simulations, </span><span class="si">%d</span><span class="s2"> cosmologies and </span><span class="si">%d</span><span class="s2"> walkers, have </span><span class="si">%d</span><span class="s2"> jobs&quot;</span> <span class="o">%</span>
+                         <span class="p">(</span><span class="n">num_models</span><span class="p">,</span> <span class="n">num_simulations</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_cosmologies</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_walkers</span><span class="p">,</span> <span class="n">num_jobs</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_laptop</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running Stan locally with 4 cores.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_fit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">num_cores</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">gethostname</span><span class="p">()</span>
+                <span class="n">partition</span> <span class="o">=</span> <span class="s2">&quot;regular&quot;</span> <span class="k">if</span> <span class="s2">&quot;edison&quot;</span> <span class="ow">in</span> <span class="n">h</span> <span class="k">else</span> <span class="s2">&quot;smp&quot;</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Deleting </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span><span class="p">)</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span><span class="p">)</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">write_jobscript_slurm</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">),</span>
+                                                 <span class="n">num_tasks</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_num_jobs</span><span class="p">(),</span> <span class="n">num_cpu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_cpu</span><span class="p">,</span>
+                                                 <span class="n">delete</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">partition</span><span class="o">=</span><span class="n">partition</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running batch job at </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s2">&quot;sbatch </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">mi</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">wi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_indexes_from_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running model </span><span class="si">%d</span><span class="s2">, sim </span><span class="si">%d</span><span class="s2">, cosmology </span><span class="si">%d</span><span class="s2">, walker number </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">wi</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">run_fit</span><span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">wi</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Fitter.load_file"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.load_file">[docs]</a>    <span class="k">def</span> <span class="nf">load_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output</span><span class="p">:</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loaded pickle from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">chain</span></div>
+
+<div class="viewcode-block" id="Fitter.get_result_from_chain"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.get_result_from_chain">[docs]</a>    <span class="k">def</span> <span class="nf">get_result_from_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">simulation_index</span><span class="p">,</span> <span class="n">model_index</span><span class="p">,</span> <span class="n">cosmo_index</span><span class="p">,</span> <span class="n">convert_names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_deviation</span><span class="o">=</span><span class="mf">2.5</span><span class="p">):</span>
+        <span class="n">sims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="p">[</span><span class="n">simulation_index</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">sims</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">sims</span> <span class="o">=</span> <span class="p">[</span><span class="n">sims</span><span class="p">]</span>
+        <span class="n">truth_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get_truth_values_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sims</span><span class="p">]</span>
+        <span class="n">truth</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="p">[</span><span class="n">t</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">truth_list</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">truth_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">truth</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">truth</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">truth</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">truth</span><span class="p">[</span><span class="n">k</span><span class="p">]])</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_index</span><span class="p">]</span><span class="o">.</span><span class="n">get_labels</span><span class="p">()</span>
+
+        <span class="n">stan_weight</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;weight&quot;</span><span class="p">)</span>
+        <span class="c1"># if stan_weight is not None:</span>
+        <span class="c1">#     stan_weight -= np.mean(stan_weight)</span>
+
+        <span class="n">new_weight</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;new_weight&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_weight</span> <span class="o">-=</span> <span class="n">max_deviation</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">new_weight</span><span class="p">)</span>
+            <span class="n">new_weight</span><span class="p">[</span><span class="n">new_weight</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">new_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">new_weight</span><span class="p">)</span>
+
+        <span class="n">posterior</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;posterior&quot;</span><span class="p">)</span>
+
+        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">convert_names</span><span class="p">:</span>
+            <span class="n">truth</span> <span class="o">=</span> <span class="p">{</span><span class="n">mapping</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span> <span class="n">truth</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">mapping</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">truth</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+
+        <span class="n">temp_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">vals</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="n">convert_names</span> <span class="k">else</span> <span class="n">p</span>
+                <span class="k">if</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">label</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">vals</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="n">num_d</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_d</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                            <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">vals</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="n">vals</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]])</span>
+                        <span class="k">if</span> <span class="n">truth</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">truth</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]])</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">:</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Truth values don&#39;t line up for </span><span class="si">%s</span><span class="s2"> </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+                                <span class="n">truth</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">%</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">truth</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">%</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">truth</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]][</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">truth</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">truth</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">truth</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]]</span> <span class="o">=</span> <span class="n">truth</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="k">if</span> <span class="n">convert_names</span><span class="p">:</span>
+                        <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">mapping</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">vals</span><span class="p">])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">temp_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">p</span><span class="p">,</span> <span class="n">vals</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Key error on </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">sys_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_index</span><span class="p">]</span><span class="o">.</span><span class="n">get_systematic_labels</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="p">[</span><span class="n">simulation_index</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temp_list</span><span class="p">)):</span>
+            <span class="n">label</span><span class="p">,</span> <span class="n">res</span> <span class="o">=</span> <span class="n">temp_list</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;\delta \mathcal</span><span class="si">{Z}</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">label</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;\delta \mathcal</span><span class="si">{Z}</span><span class="s2">_{&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;}&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys_labels</span><span class="p">):</span>
+                    <span class="n">temp_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">delta [ Unknown ]$&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">temp_list</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">sys_labels</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">temp_list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">model_index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulations</span><span class="p">[</span><span class="n">simulation_index</span><span class="p">],</span> <span class="n">cosmo_index</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">truth</span><span class="p">,</span> <span class="n">new_weight</span><span class="p">,</span> <span class="n">stan_weight</span><span class="p">,</span> <span class="n">posterior</span></div>
+
+<div class="viewcode-block" id="Fitter.load"><a class="viewcode-back" href="../../../dessn.framework.html#dessn.framework.fitter.Fitter.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">split_models</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">split_sims</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">split_cosmo</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">convert_names</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">max_deviation</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">squeeze</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pkl&quot;</span><span class="p">)]</span>
+        <span class="n">files</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+        <span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_dir</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+        <span class="n">model_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+        <span class="n">sim_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+        <span class="n">cosmo_indexes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">3</span><span class="p">])</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">load_file</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">]</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">prev_model</span><span class="p">,</span> <span class="n">prev_sim</span><span class="p">,</span> <span class="n">prev_cosmo</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="n">stacked</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">ci</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="n">model_indexes</span><span class="p">,</span> <span class="n">sim_indexes</span><span class="p">,</span> <span class="n">cosmo_indexes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">prev_cosmo</span> <span class="o">!=</span> <span class="n">ci</span> <span class="ow">and</span> <span class="n">split_cosmo</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">prev_model</span> <span class="o">!=</span> <span class="n">mi</span> <span class="ow">and</span> <span class="n">split_models</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">prev_sim</span> <span class="o">!=</span> <span class="n">si</span> <span class="ow">and</span> <span class="n">split_sims</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">stacked</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_result_from_chain</span><span class="p">(</span><span class="n">stacked</span><span class="p">,</span> <span class="n">prev_sim</span><span class="p">,</span> <span class="n">prev_model</span><span class="p">,</span> <span class="n">prev_cosmo</span><span class="p">,</span> <span class="n">convert_names</span><span class="o">=</span><span class="n">convert_names</span><span class="p">,</span> <span class="n">max_deviation</span><span class="o">=</span><span class="n">max_deviation</span><span class="p">))</span>
+                <span class="n">stacked</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">prev_model</span> <span class="o">=</span> <span class="n">mi</span>
+                <span class="n">prev_sim</span> <span class="o">=</span> <span class="n">si</span>
+                <span class="n">prev_cosmo</span> <span class="o">=</span> <span class="n">ci</span>
+            <span class="k">if</span> <span class="n">stacked</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stacked</span> <span class="o">=</span> <span class="n">c</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="n">stacked</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">stacked</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_result_from_chain</span><span class="p">(</span><span class="n">stacked</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="n">ci</span><span class="p">,</span> <span class="n">convert_names</span><span class="o">=</span><span class="n">convert_names</span><span class="p">,</span> <span class="n">max_deviation</span><span class="o">=</span><span class="n">max_deviation</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">squeeze</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">results</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

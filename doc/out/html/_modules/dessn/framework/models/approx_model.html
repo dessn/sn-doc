@@ -1,0 +1,627 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.framework.models.approx_model &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>dessn.framework.models.approx_model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dessn.framework.models.approx_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="k">import</span> <span class="n">uniform</span><span class="p">,</span> <span class="n">normal</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+
+<span class="kn">from</span> <span class="nn">dessn.framework.model</span> <span class="k">import</span> <span class="n">Model</span>
+
+
+<div class="viewcode-block" id="ApproximateModel"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel">[docs]</a><span class="k">class</span> <span class="nc">ApproximateModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;approximate.stan&quot;</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">statonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">frac_shift</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">apply_efficiency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">prior</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_systematics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_disp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_pop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_base</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_drift</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">fakes</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statonly</span> <span class="o">=</span> <span class="n">statonly</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">stack</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">stan_file</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">+</span> <span class="s2">&quot;/stan/&quot;</span> <span class="o">+</span> <span class="n">filename</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">stan_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_redshift_nodes</span> <span class="o">=</span> <span class="n">num_nodes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">systematics_scale</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">statonly</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frac_shift</span> <span class="o">=</span> <span class="n">frac_shift</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">apply_efficiency</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">apply_efficiency</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="o">=</span> <span class="n">prior</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock_systematics</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">lock_systematics</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock_disp</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">lock_disp</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock_pop</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">lock_pop</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock_base</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">lock_base</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock_drift</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">lock_drift</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fakes</span> <span class="o">=</span> <span class="n">fakes</span>
+
+<div class="viewcode-block" id="ApproximateModel.get_parameters"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;Om&quot;</span><span class="p">,</span> <span class="s2">&quot;Ol&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="s2">&quot;dscale&quot;</span><span class="p">,</span> <span class="s2">&quot;dratio&quot;</span><span class="p">,</span> <span class="s2">&quot;mean_MB&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;sigma_MB&quot;</span><span class="p">,</span> <span class="s2">&quot;sigma_x1&quot;</span><span class="p">,</span> <span class="s2">&quot;sigma_c&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa_c0&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa_c1&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa_c2&quot;</span><span class="p">,</span> <span class="s2">&quot;kappa_c3&quot;</span><span class="p">,</span> <span class="s2">&quot;smear&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;rho_c&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha_c&quot;</span><span class="p">,</span> <span class="s2">&quot;alpha_x1&quot;</span><span class="p">,</span>
+                <span class="c1">#&quot;outlier_MB_delta&quot;, &quot;outlier_dispersion&quot;</span>
+                <span class="s2">&quot;delta_alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;delta_beta&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;mean_x1&quot;</span><span class="p">,</span> <span class="s2">&quot;mean_c&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;calibration&quot;</span><span class="p">,</span> <span class="s2">&quot;deltas&quot;</span><span class="p">,</span> <span class="s2">&quot;intrinsic_correlation&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_labels"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">([</span>
+            <span class="p">(</span><span class="s2">&quot;Om&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Omega_m$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;Ol&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Omega_\Lambda$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$w$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;beta&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\beta$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_MB&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\langle M_B \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_MB&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_{\rm m_B}^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_x1&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_</span><span class="si">{x_1}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;sigma_c&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\sigma_</span><span class="si">{c}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha_c&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha_c^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;kappa_c0&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\kappa_</span><span class="si">{c0}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;kappa_c1&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\kappa_</span><span class="si">{c1}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;kappa_c2&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\kappa_</span><span class="si">{c2}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;kappa_c3&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\kappa_</span><span class="si">{c3}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;rho_c&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\rho_</span><span class="si">{c}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;smear&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$s_c^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;dscale&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta(0)$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;dratio&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta(\infty)/\delta(0)$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;delta_alpha&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta_\alpha$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;alpha_x1&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\alpha_</span><span class="si">{x_1}</span><span class="s2">^{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;delta_beta&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta_\beta$&quot;</span><span class="p">),</span>
+            <span class="c1">#(&quot;outlier_MB_delta&quot;, r&quot;$\delta M_B$&quot;),</span>
+            <span class="c1">#(&quot;outlier_dispersion&quot;, r&quot;$\sigma_{\rm out}^{%d}$&quot;),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_x1&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\langle x_1^{</span><span class="si">%d</span><span class="s2">} \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;mean_c&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\langle c^{</span><span class="si">%d</span><span class="s2">} \rangle$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;calibration&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\delta \mathcal</span><span class="si">{Z}</span><span class="s2">_{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">&quot;deltas&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Delta_{</span><span class="si">%d</span><span class="s2">}$&quot;</span><span class="p">)</span>
+        <span class="p">])</span>
+        <span class="k">return</span> <span class="n">mapping</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_init"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_init">[docs]</a>    <span class="k">def</span> <span class="nf">get_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">deta_dcalib</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;deta_dcalib&quot;</span><span class="p">]</span>
+        <span class="n">num_supernova</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">]</span>
+        <span class="n">num_surveys</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;n_surveys&quot;</span><span class="p">]</span>
+        <span class="n">randoms</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Om&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span>
+            <span class="s2">&quot;Ol&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
+            <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">1.1</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">),</span>
+            <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span>
+            <span class="s2">&quot;delta_alpha&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+            <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">),</span>
+            <span class="s2">&quot;delta_beta&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span>
+            <span class="s2">&quot;dscale&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">),</span>
+            <span class="s2">&quot;dratio&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;mean_MB&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">19.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">19.2</span><span class="p">),</span>
+            <span class="s2">&quot;smear&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;alpha_c&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,)),</span>
+            <span class="s2">&quot;delta_c&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,)),</span>
+            <span class="s2">&quot;skew_c&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,)),</span>
+            <span class="s2">&quot;alpha_x1&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,)),</span>
+            <span class="c1">#&quot;outlier_MB_delta&quot;: uniform(0.1, 2),</span>
+            <span class="c1">#&quot;outlier_dispersion&quot;: 0.5 + uniform(low=0.1, high=1.0, size=3),</span>
+            <span class="s2">&quot;mean_x1&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_redshift_nodes</span><span class="p">)),</span>
+            <span class="s2">&quot;mean_c&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_redshift_nodes</span><span class="p">)),</span>
+            <span class="s2">&quot;log_sigma_MB&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,)),</span>
+            <span class="s2">&quot;log_sigma_x1&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,)),</span>
+            <span class="s2">&quot;log_sigma_c&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,)),</span>
+            <span class="s2">&quot;deviations&quot;</span><span class="p">:</span> <span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_supernova</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+            <span class="s2">&quot;deltas&quot;</span><span class="p">:</span> <span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+            <span class="s2">&quot;kappa_c0&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="s2">&quot;kappa_c1&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="s2">&quot;kappa_c2&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="s2">&quot;kappa_c3&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="s2">&quot;rho_c&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">,</span> <span class="p">)),</span>
+            <span class="s2">&quot;calibration&quot;</span><span class="p">:</span> <span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">deta_dcalib</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="p">}</span>
+        <span class="n">chol</span> <span class="o">=</span> <span class="p">[[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                 <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">-</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">+</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
+                 <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">-</span> <span class="mf">0.05</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">-</span> <span class="mf">0.05</span><span class="p">,</span>
+                  <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">+</span> <span class="mf">0.7</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_surveys</span><span class="p">)]</span>
+        <span class="n">randoms</span><span class="p">[</span><span class="s2">&quot;intrinsic_correlation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">chol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initial starting point is: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">randoms</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">randoms</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_name"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Approx&quot;</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_data"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulations</span><span class="p">,</span> <span class="n">cosmology_index</span><span class="p">,</span> <span class="n">add_zs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">simulations</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="n">simulations</span> <span class="o">=</span> <span class="p">[</span><span class="n">simulations</span><span class="p">]</span>
+
+        <span class="n">data_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get_passed_supernova</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">num_supernova</span><span class="p">,</span> <span class="n">cosmology_index</span><span class="o">=</span><span class="n">cosmology_index</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">simulations</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">n_snes</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Have </span><span class="si">%s</span><span class="s2"> supernovae&quot;</span> <span class="o">%</span> <span class="n">n_snes</span><span class="p">)</span>
+
+        <span class="n">n_surveys</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_list</span><span class="p">)</span>
+
+        <span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_systematic_labels</span><span class="p">(</span><span class="n">simulations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Systematic labels are </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">label_lists</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get_systematic_names</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">simulations</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statonly</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;deta_dcalib&quot;</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">d</span><span class="p">[</span><span class="s2">&quot;deta_dcalib&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">d</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Got observational data&quot;</span><span class="p">)</span>
+        <span class="c1"># Redshift shenanigans below used to create simpsons rule arrays</span>
+        <span class="c1"># and then extract the right redshift indexes from them</span>
+
+        <span class="n">n_z</span> <span class="o">=</span> <span class="mi">2000</span>  <span class="c1"># Defines how many points we get in simpsons rule</span>
+        <span class="n">num_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_redshift_nodes</span>
+
+        <span class="n">nodes_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">node_weights_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sim_data_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">num_calibs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mean_masses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">survey_map</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">n_sne</span><span class="p">,</span> <span class="n">sim</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">n_snes</span><span class="p">,</span> <span class="n">simulations</span><span class="p">)):</span>
+            <span class="n">num_calibs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;deta_dcalib&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">redshifts</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;redshifts&quot;</span><span class="p">]</span>
+            <span class="n">masses</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;masses&quot;</span><span class="p">]</span>
+            <span class="n">mean_masses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">masses</span><span class="p">))</span>
+            <span class="n">survey_map</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">redshifts</span><span class="o">.</span><span class="n">size</span>  <span class="c1"># +1 for Stan being 1 indexed</span>
+
+            <span class="k">if</span> <span class="n">num_nodes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">node_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="n">n_sne</span><span class="p">)</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">zs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">redshifts</span><span class="p">)</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">zs</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">zs</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">],</span> <span class="n">num_nodes</span><span class="p">)</span>
+                <span class="n">node_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_node_weights</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">redshifts</span><span class="p">)</span>
+
+            <span class="n">nodes_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+            <span class="n">node_weights_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_weights</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">add_zs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">sim_data</span> <span class="o">=</span> <span class="n">add_zs</span><span class="p">(</span><span class="n">sim</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sim_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="n">sim_data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+
+        <span class="n">node_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">node_weights_list</span><span class="p">)</span>
+        <span class="n">num_calib</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">total_num_sne</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">n_snes</span><span class="p">)</span>
+
+        <span class="c1"># data_list is a list of dictionaries, aiming for a dictionary with lists</span>
+        <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">data_dict</span> <span class="o">=</span> <span class="n">data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;n_snes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;deta_dcalib&quot;</span><span class="p">:</span>  <span class="c1"># Changing shape of deta_dcalib makes this different</span>
+                    <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">blank</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">total_num_sne</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">num_calib</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">labs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">label_lists</span><span class="p">):</span>
+                        <span class="n">nsne</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">l</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labs</span><span class="p">:</span>
+                                <span class="k">continue</span>
+                            <span class="n">index</span> <span class="o">=</span> <span class="n">labs</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+                            <span class="n">blank</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span> <span class="o">+</span> <span class="n">nsne</span><span class="p">,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;deta_dcalib&quot;</span><span class="p">][:,</span> <span class="p">:,</span> <span class="n">index</span><span class="p">]</span>
+                        <span class="n">offset</span> <span class="o">+=</span> <span class="n">nsne</span>
+                    <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">blank</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">key</span><span class="p">])</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+                        <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data_list</span><span class="p">])</span>
+
+            <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;n_snes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">]</span>
+            <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;n_sne&quot;</span><span class="p">])</span>
+
+        <span class="n">sim_redshifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">sim</span><span class="p">[</span><span class="s2">&quot;sim_redshifts&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">sim</span> <span class="ow">in</span> <span class="n">sim_data_list</span> <span class="k">if</span> <span class="s2">&quot;sim_redshifts&quot;</span> <span class="ow">in</span> <span class="n">sim</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">redshifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">z</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">data_list</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;redshifts&quot;</span><span class="p">]])</span>
+        <span class="n">zs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">redshifts</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">+</span> <span class="n">sim_redshifts</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="n">dz</span> <span class="o">=</span> <span class="n">zs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_z</span>
+        <span class="n">added_zs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pz</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">zs</span><span class="p">:</span>
+            <span class="n">est_point</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">z</span> <span class="o">-</span> <span class="n">pz</span><span class="p">)</span> <span class="o">/</span> <span class="n">dz</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">est_point</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">est_point</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">est_point</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">est_point</span><span class="p">)</span>
+            <span class="n">new_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">pz</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">est_point</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">added_zs</span> <span class="o">+=</span> <span class="n">new_points</span>
+            <span class="n">pz</span> <span class="o">=</span> <span class="n">z</span>
+
+        <span class="n">n_z</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">zs</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">added_zs</span><span class="p">)</span>
+        <span class="n">n_simps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">n_z</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">to_sort</span> <span class="o">=</span> <span class="p">[(</span><span class="n">z</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">added_zs</span><span class="p">]</span> <span class="o">+</span> <span class="p">[(</span><span class="n">z</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">redshifts</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">add_zs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">to_sort</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">z</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sim_redshifts</span><span class="p">)]</span>
+        <span class="n">to_sort</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">final_redshifts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">z</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">to_sort</span><span class="p">])</span>
+        <span class="n">sorted_vals</span> <span class="o">=</span> <span class="p">[(</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_sort</span><span class="p">)</span> <span class="k">if</span> <span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">sorted_vals</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">sorted_vals</span><span class="p">]</span>
+        <span class="c1"># End redshift shenanigans</span>
+        <span class="n">n_calib</span> <span class="o">=</span> <span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;deta_dcalib&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">update</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;n_z&quot;</span><span class="p">:</span> <span class="n">n_z</span><span class="p">,</span>
+            <span class="s2">&quot;n_calib&quot;</span><span class="p">:</span> <span class="n">n_calib</span><span class="p">,</span>
+            <span class="s2">&quot;n_surveys&quot;</span><span class="p">:</span> <span class="n">n_surveys</span><span class="p">,</span>
+            <span class="s2">&quot;survey_map&quot;</span><span class="p">:</span> <span class="n">survey_map</span><span class="p">,</span>
+            <span class="s2">&quot;n_simps&quot;</span><span class="p">:</span> <span class="n">n_simps</span><span class="p">,</span>
+            <span class="s2">&quot;zs&quot;</span><span class="p">:</span> <span class="n">final_redshifts</span><span class="p">,</span>
+            <span class="s2">&quot;zspo&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">final_redshifts</span><span class="p">,</span>
+            <span class="s2">&quot;zsom&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">final_redshifts</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span><span class="p">,</span>
+            <span class="s2">&quot;zsok&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">final_redshifts</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s2">&quot;redshift_indexes&quot;</span><span class="p">:</span> <span class="n">final</span><span class="p">,</span>
+            <span class="s2">&quot;redshift_pre_comp&quot;</span><span class="p">:</span> <span class="mf">0.9</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.95</span> <span class="o">*</span> <span class="n">redshifts</span><span class="p">),</span>
+            <span class="s2">&quot;calib_std&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_calib</span><span class="p">),</span>
+            <span class="s2">&quot;num_nodes&quot;</span><span class="p">:</span> <span class="n">num_nodes</span><span class="p">,</span>
+            <span class="s2">&quot;node_weights&quot;</span><span class="p">:</span> <span class="n">node_weights</span><span class="p">,</span>
+            <span class="s2">&quot;nodes&quot;</span><span class="p">:</span> <span class="n">nodes_list</span><span class="p">,</span>
+            <span class="s2">&quot;outlier_MB_delta&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;outlier_dispersion&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span>
+            <span class="s2">&quot;systematics_scale&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">systematics_scale</span>
+        <span class="p">}</span>
+
+        <span class="n">sim_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">add_zs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sim_data_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">sim_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">sim_data_list</span><span class="p">]</span>
+            <span class="n">sim_dict</span><span class="p">[</span><span class="s2">&quot;n_sim&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sim_dict</span><span class="p">[</span><span class="s2">&quot;n_sim&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">n_sim</span> <span class="o">=</span> <span class="n">sim_dict</span><span class="p">[</span><span class="s2">&quot;n_sim&quot;</span><span class="p">]</span>
+            <span class="n">sim_sorted_vals</span> <span class="o">=</span> <span class="p">[(</span><span class="n">z</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_sort</span><span class="p">)</span> <span class="k">if</span> <span class="n">z</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">sim_sorted_vals</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+            <span class="n">sim_final</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">sim_sorted_vals</span><span class="p">]</span>
+            <span class="n">update</span><span class="p">[</span><span class="s2">&quot;sim_redshift_indexes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sim_final</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_surveys</span><span class="p">,</span> <span class="n">n_sim</span><span class="p">))</span>
+            <span class="n">update</span><span class="p">[</span><span class="s2">&quot;sim_redshift_pre_comp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.9</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">0.95</span> <span class="o">*</span> <span class="n">sim_redshifts</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_surveys</span><span class="p">,</span> <span class="n">n_sim</span><span class="p">))</span>
+
+            <span class="n">sim_node_weights</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">sim_data</span><span class="p">,</span> <span class="n">nodes</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sim_data_list</span><span class="p">,</span> <span class="n">nodes_list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">num_nodes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">sim_node_weights</span> <span class="o">+=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">*</span> <span class="n">sim_data</span><span class="p">[</span><span class="s2">&quot;sim_redshifts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sim_node_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_node_weights</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">sim_data</span><span class="p">[</span><span class="s2">&quot;sim_redshifts&quot;</span><span class="p">]))</span>
+            <span class="n">update</span><span class="p">[</span><span class="s2">&quot;sim_node_weights&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sim_node_weights</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n_surveys</span><span class="p">,</span> <span class="n">n_sim</span><span class="p">,</span> <span class="n">num_nodes</span><span class="p">))</span>
+
+        <span class="n">obs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data_dict</span><span class="p">[</span><span class="s2">&quot;obs_mBx1c&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Obs x1 std is </span><span class="si">%f</span><span class="s2">, colour std is </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">obs_data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">obs_data</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])))</span>
+
+        <span class="c1"># Add in data for the approximate selection efficiency in mB</span>
+        <span class="n">means</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">alphas</span><span class="p">,</span> <span class="n">correction_skewnorms</span><span class="p">,</span> <span class="n">norms</span><span class="p">,</span> <span class="n">signs</span><span class="p">,</span> <span class="n">covs</span><span class="p">,</span> <span class="n">deltas</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sim</span><span class="p">,</span> <span class="n">dataa</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">simulations</span><span class="p">,</span> <span class="n">data_list</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">get_approximate_correction</span><span class="p">()</span>
+            <span class="n">correction_skewnorm</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">res</span>
+            <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">norm</span> <span class="o">=</span> <span class="n">vals</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">means</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+            <span class="n">stds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>
+            <span class="n">correction_skewnorms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">correction_skewnorm</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">covs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span>
+            <span class="n">deltas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delta</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">alpha</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">alphas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span>
+                <span class="n">signs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">alpha</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">alphas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+                <span class="n">signs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">norm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">norms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">norms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mB_mean_orig&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">means</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mB_width_orig&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stds</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mB_alpha_orig&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">alphas</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mB_norm_orig&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">norms</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mB_sgn_alpha&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">signs</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mB_cov&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">covs</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mB_kappa&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">deltas</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;correction_skewnorm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">correction_skewnorms</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;frac_shift&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frac_shift</span>
+
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;mean_mass&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_masses</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;apply_efficiency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_efficiency</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;lock_systematics&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_systematics</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;lock_pop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_pop</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;lock_disp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_disp</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;lock_base&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_base</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;lock_drift&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock_drift</span>
+        <span class="n">update</span><span class="p">[</span><span class="s2">&quot;apply_prior&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fakes</span><span class="p">:</span>
+            <span class="n">update</span><span class="p">[</span><span class="s2">&quot;fakes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">total_num_sne</span><span class="p">)</span>
+
+        <span class="n">final_dict</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">data_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">update</span><span class="p">,</span> <span class="o">**</span><span class="n">sim_dict</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">final_dict</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_global_from_sims"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_global_from_sims">[docs]</a>    <span class="k">def</span> <span class="nf">get_global_from_sims</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulations</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statonly</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;Fake&quot;</span><span class="p">]</span>
+        <span class="n">num_sims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">simulations</span><span class="p">)</span>
+        <span class="n">all_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">simulations</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">get_systematic_names</span><span class="p">()]</span>
+        <span class="n">counted</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">all_labels</span><span class="p">)</span>
+        <span class="n">global_labels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">all_labels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">global_labels</span> <span class="ow">and</span> <span class="n">counted</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">==</span> <span class="n">num_sims</span><span class="p">:</span>
+                <span class="n">global_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">global_labels</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_systematic_labels"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_systematic_labels">[docs]</a>    <span class="k">def</span> <span class="nf">get_systematic_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulations</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulations</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">simulations</span> <span class="o">=</span> <span class="p">[</span><span class="n">simulations</span><span class="p">]</span>
+        <span class="n">label_lists</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">get_systematic_names</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">simulations</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">statonly</span><span class="p">:</span>
+            <span class="n">label_lists</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Fake&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">simulations</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_lists</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">label_lists</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Fake&quot;</span><span class="p">)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_global_from_sims</span><span class="p">(</span><span class="n">simulations</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">label_list</span> <span class="ow">in</span> <span class="n">label_lists</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">label_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">l</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">start</span><span class="p">:</span>
+                    <span class="n">start</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$\delta [ </span><span class="si">%s</span><span class="s2"> ]$&quot;</span> <span class="o">%</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">start</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">res</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_node_weights"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_node_weights">[docs]</a>    <span class="k">def</span> <span class="nf">get_node_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">redshifts</span><span class="p">):</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">interps</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">indexes</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="s2">&quot;extrapolate&quot;</span><span class="p">)(</span><span class="n">redshifts</span><span class="p">)</span>
+        <span class="n">node_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">indexes</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">interps</span><span class="p">])</span>
+        <span class="n">end_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">node_weights</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">node_weights</span> <span class="o">*=</span> <span class="p">(</span><span class="n">node_weights</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">node_weights</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">node_weights</span><span class="p">[</span><span class="n">end_mask</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">node_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">node_weights</span><span class="p">)</span>
+        <span class="n">reweight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">node_weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">node_weights</span> <span class="o">=</span> <span class="p">(</span><span class="n">node_weights</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">reweight</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">return</span> <span class="n">node_weights</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.correct_chain"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.correct_chain">[docs]</a>    <span class="k">def</span> <span class="nf">correct_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">simulation</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="c1"># del dictionary[&quot;intrinsic_correlation&quot;]</span>
+        <span class="k">return</span> <span class="n">dictionary</span></div>
+
+<div class="viewcode-block" id="ApproximateModel.get_cosmo_params"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModel.get_cosmo_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_cosmo_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$\Omega_m$&quot;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="ApproximateModelOl"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModelOl">[docs]</a><span class="k">class</span> <span class="nc">ApproximateModelOl</span><span class="p">(</span><span class="n">ApproximateModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;approximate_ol.stan&quot;</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">statonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">frac_shift</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">apply_efficiency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_systematics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_disp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_pop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_base</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_drift</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="n">num_nodes</span><span class="p">,</span> <span class="n">statonly</span><span class="o">=</span><span class="n">statonly</span><span class="p">,</span> <span class="n">frac_shift</span><span class="o">=</span><span class="n">frac_shift</span><span class="p">,</span> <span class="n">apply_efficiency</span><span class="o">=</span><span class="n">apply_efficiency</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span> <span class="n">lock_systematics</span><span class="o">=</span><span class="n">lock_systematics</span><span class="p">,</span> <span class="n">lock_disp</span><span class="o">=</span><span class="n">lock_disp</span><span class="p">,</span> <span class="n">lock_pop</span><span class="o">=</span><span class="n">lock_pop</span><span class="p">,</span> <span class="n">lock_base</span><span class="o">=</span><span class="n">lock_base</span><span class="p">,</span> <span class="n">lock_drift</span><span class="o">=</span><span class="n">lock_drift</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ApproximateModelOl.get_cosmo_params"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModelOl.get_cosmo_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_cosmo_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$\Omega_m$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$\Omega_\Lambda$&quot;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="ApproximateModelW"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModelW">[docs]</a><span class="k">class</span> <span class="nc">ApproximateModelW</span><span class="p">(</span><span class="n">ApproximateModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;approximate_w.stan&quot;</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">statonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">frac_shift</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">apply_efficiency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lock_systematics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_disp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_pop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_base</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_drift</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="n">num_nodes</span><span class="p">,</span> <span class="n">statonly</span><span class="o">=</span><span class="n">statonly</span><span class="p">,</span> <span class="n">frac_shift</span><span class="o">=</span><span class="n">frac_shift</span><span class="p">,</span> <span class="n">apply_efficiency</span><span class="o">=</span><span class="n">apply_efficiency</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span> <span class="n">lock_systematics</span><span class="o">=</span><span class="n">lock_systematics</span><span class="p">,</span> <span class="n">lock_disp</span><span class="o">=</span><span class="n">lock_disp</span><span class="p">,</span> <span class="n">lock_pop</span><span class="o">=</span><span class="n">lock_pop</span><span class="p">,</span> <span class="n">lock_base</span><span class="o">=</span><span class="n">lock_base</span><span class="p">,</span> <span class="n">lock_drift</span><span class="o">=</span><span class="n">lock_drift</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ApproximateModelW.get_cosmo_params"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModelW.get_cosmo_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_cosmo_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$\Omega_m$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$w$&quot;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="ApproximateModelWSimplified"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModelWSimplified">[docs]</a><span class="k">class</span> <span class="nc">ApproximateModelWSimplified</span><span class="p">(</span><span class="n">ApproximateModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;approximate_w_simplified.stan&quot;</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">statonly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">frac_shift</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">apply_efficiency</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">lock_systematics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_disp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_pop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">lock_drift</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">num_nodes</span><span class="o">=</span><span class="n">num_nodes</span><span class="p">,</span> <span class="n">statonly</span><span class="o">=</span><span class="n">statonly</span><span class="p">,</span> <span class="n">frac_shift</span><span class="o">=</span><span class="n">frac_shift</span><span class="p">,</span> <span class="n">apply_efficiency</span><span class="o">=</span><span class="n">apply_efficiency</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span> <span class="n">lock_systematics</span><span class="o">=</span><span class="n">lock_systematics</span><span class="p">,</span> <span class="n">lock_disp</span><span class="o">=</span><span class="n">lock_disp</span><span class="p">,</span> <span class="n">lock_pop</span><span class="o">=</span><span class="n">lock_pop</span><span class="p">,</span> <span class="n">lock_drift</span><span class="o">=</span><span class="n">lock_drift</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ApproximateModelWSimplified.get_cosmo_params"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.ApproximateModelWSimplified.get_cosmo_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_cosmo_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$\Omega_m$&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$w$&quot;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="FakeModel"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.FakeModel">[docs]</a><span class="k">class</span> <span class="nc">FakeModel</span><span class="p">(</span><span class="n">ApproximateModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;fake.stan&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">fakes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FakeModel.get_cosmo_params"><a class="viewcode-back" href="../../../../dessn.framework.models.html#dessn.framework.models.approx_model.FakeModel.get_cosmo_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_cosmo_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;$w$&quot;</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="../../../../_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>

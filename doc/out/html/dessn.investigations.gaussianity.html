@@ -1,0 +1,481 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dessn.investigations.gaussianity package &mdash; DES Supernova BHM 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DES Supernova BHM
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="investigations_sep.html">Investigations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="implementations_sep.html">Implementations</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DES Supernova BHM</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>dessn.investigations.gaussianity package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/dessn.investigations.gaussianity.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-dessn.investigations.gaussianity">
+<span id="dessn-investigations-gaussianity-package"></span><h1>dessn.investigations.gaussianity package<a class="headerlink" href="#module-dessn.investigations.gaussianity" title="Permalink to this headline">¶</a></h1>
+<p>In most supernova cosmology analyses, the analysis is performed not using the observed
+light curves, but using SALT2 summary statistics. Whilst this choice does provide
+strong computational benefits, the underpinning assumption of validity for using
+the summary statistics - namely that they are Gaussian - is often assumed.</p>
+<p>In order to provide a more rigorous justification for utilising this assumption,
+I investigate how well the summary statistics reflect the full posterior
+surface of the SALT2 fits under a variety of conditions and supernova
+parametrisation.</p>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>To begin with, we pick the optimal case for a supernova: a high signal-to-noise
+signal observed regularly throughout the entire supernova lifespan for
+a supernova with an exactly determined redshift. We generate
+a value for supernova parameters <span class="math">\(x_0,\, x_1,\, t_0,\, c,\, z\)</span> and realise
+a SALT2 light curve using <code class="docutils literal"><span class="pre">sncosmo</span></code>. The light curve realised is shown below.</p>
+<div class="figure align-center" id="id3">
+<a class="reference internal image-reference" href="_images/lc_simple.png"><img alt="_images/lc_simple.png" src="_images/lc_simple.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">A realised light curve in the DES filters, with 30 observations in each band spanning
+a time frame of 60 days before and after the peak time.</span></p>
+</div>
+<p>We then fit the light curves to get summary statistics using <code class="docutils literal"><span class="pre">sncosmo</span></code>, and compare
+this to a separate MCMC fit which records the entire posterior surface. In this optimal case
+we hope to see a high degree of agreement between the summary statistics and full posterior
+surface.</p>
+<div class="figure align-center" id="id4">
+<a class="reference internal image-reference" href="_images/surfaces_simple.png"><img alt="_images/surfaces_simple.png" src="_images/surfaces_simple.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">The two posterior surfaces agree closely. Contours shown are for 0.5, 1, 2 and 3 sigma levels.</span></p>
+</div>
+<p>This simple example provides the framework for a more sophisticated analysis. In it, we vary
+the supernova parameters and observation scenario (time pre-peak, and post-peak, frequency
+of observations) and determine the difference between the full posterior surface and
+summary statistics via a given metric, and determine in what regions of parameter space
+might the gaussianity assumption not adequately hold.</p>
+<p>Our primary parameter of interest is not any of the fit parameters, but is instead
+the distance modulus <span class="math">\(\mu\)</span>, as it is biases in the distance modulus which will
+bias our cosmology. Using fiducial values for <span class="math">\(\alpha\)</span> and <span class="math">\(\beta\)</span> from <a class="reference internal" href="inv_gauss.html#re7a0e5d21dfc-1" id="id1">[Re7a0e5d21dfc-1]</a>,
+we have the distance modulus as</p>
+<div class="math">
+\[\mu = m_B^* - M + \alpha x_1 - \beta c,\]</div>
+<p>where <span class="math">\(m_B^*\)</span> is calculated using <code class="docutils literal"><span class="pre">sncosmo</span></code>. Using this relationship, and moving
+the nuisance parameter <span class="math">\(M\)</span> to the other side, we can convert our multi-dimensional
+posterior surface into a single dimension, and then check for any biases in the mean and
+variance of the <span class="math">\(\mu+M\)</span> distribution. Doing this for the simple example above gives
+us the distributions shown below, which have <span class="math">\(\Delta (\mu+M) = 0.003\)</span>
+and <span class="math">\(\Delta (\sigma_{\mu+M}) = 0.0007\)</span>, a negligible difference for use in cosmology.</p>
+<p>To rephrase the above for more clarity, what we are doing is comparing the distribution
+of <span class="math">\(\mu +M\)</span> from a full posterior surface against the distribution obtained from
+using summary statistics (assuming gaussianity).</p>
+<div class="figure align-center" id="id5">
+<a class="reference internal image-reference" href="_images/mu_simple.png"><img alt="_images/mu_simple.png" src="_images/mu_simple.png" style="width: 70%;" /></a>
+<p class="caption"><span class="caption-text">The posterior surfaces from the previous figure transformed into distance modulus.</span></p>
+</div>
+</div>
+<div class="section" id="generalisation">
+<h2>Generalisation<a class="headerlink" href="#generalisation" title="Permalink to this headline">¶</a></h2>
+<p>By finding the difference in mean and standard deviation of the <span class="math">\(\mu+M\)</span> distributions
+from assuming a Gaussian approximation and examining the full posterior surface, we can
+investigate the effect of various observational conditions. Parameters which may be of
+interest are the peak signal to noise of the light curves, the number of observations,
+and when observations for a supernova begin (ie how early do we catch the supernova
+before peak) - in addition to stretch, colour and redshift.</p>
+<p>To simplify the problem, we assume consistent observations every five days.</p>
+<p>First, we generate supernova with stretch and colour set to zero, with observations
+starting well before the peak and spanning the lifetime of the supernova. We allow
+the redshift and sky flux to vary (ie redshift and signal-to-noise changes). The shift in
+the mean value for <span class="math">\(\mu+M\)</span> is shown in the figure below.</p>
+<div class="figure align-center" id="id6">
+<a class="reference internal image-reference" href="_images/bias2.png"><img alt="_images/bias2.png" src="_images/bias2.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">The bias in <span class="math">\(\mu+M\)</span> as a function of redshift
+and signal to noise. Each sample is shown as a point, with a third order polynomial
+fit to the surface shown as a contour. The left hand column shows the change
+in <span class="math">\(\Delta(\mu + M)\)</span>, and the right
+hand column shows the <em>percentage</em> change in standard deviation for the marginalised
+distributions of <span class="math">\(\mu+M\)</span>. There are three rows, to reflect the three different
+way summary statistics are obtained: <strong>FSS:</strong> From an <code class="docutils literal"><span class="pre">iminuit</span></code> fit using <code class="docutils literal"><span class="pre">sncosmo</span></code>.
+<strong>MSS:</strong> From an <code class="docutils literal"><span class="pre">emcee</span></code> fit using <code class="docutils literal"><span class="pre">sncosmo</span></code>. <strong>PSS:</strong> From an <code class="docutils literal"><span class="pre">emcee</span></code> fit not
+using the <code class="docutils literal"><span class="pre">mcmc_lc</span></code> method in <code class="docutils literal"><span class="pre">sncosmo</span></code>.</span></p>
+</div>
+<p>With reference to the above figure, we can see that the summary statistics provide
+accurate statistics when the mean and covariance are determined from the <code class="docutils literal"><span class="pre">emcee</span></code> distribution,
+implying low skewness of the posterior surface. However, the difference between the
+<code class="docutils literal"><span class="pre">minuit</span></code> fits and both <code class="docutils literal"><span class="pre">emcee</span></code> fits gives rise to a difference which is not negligible.</p>
+</div>
+<div class="section" id="des-specific-survey-conditions">
+<h2>DES Specific Survey Conditions<a class="headerlink" href="#des-specific-survey-conditions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="shallow-field">
+<h3>Shallow Field<a class="headerlink" href="#shallow-field" title="Permalink to this headline">¶</a></h3>
+<p>To investigate the DES specific impact of Salt 2 summary statistics gaussianity,
+we implement DES-like simulations. Specifically in this section, we emulate shallow
+field observations for DES in the <em>griz</em> bands for typical seeing conditions. We
+fit for a range of supernova over a redshift distribution from 0.1 to 0.9, and investigate
+the derived parameter <span class="math">\(\mu + M\)</span> with regards to the shift in mean, change in
+variance, and pull. We also add in <code class="docutils literal"><span class="pre">nestle</span></code> as a forth fitting methodology to help
+discriminate between <code class="docutils literal"><span class="pre">minuit</span></code> and <code class="docutils literal"><span class="pre">emcee</span></code>.</p>
+<blockquote>
+<div><div class="figure align-center" id="id7">
+<a class="reference internal image-reference" href="_images/bias_dessky.png"><img alt="_images/bias_dessky.png" src="_images/bias_dessky.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">The bias in <span class="math">\(\mu+M\)</span> as a function of redshift. Samples are binned and the mean and
+dispersion of the samples is shown in the plot. The left hand column shows the change
+in <span class="math">\(\Delta(\mu + M)\)</span>, the middle column shows the pull, and the right
+hand column shows the <em>percentage</em> change in standard deviation for the marginalised
+distributions of <span class="math">\(\mu+M\)</span>. Compared are a full posterior (derived from <code class="docutils literal"><span class="pre">emcee</span></code>) against
+summary statistics generated from the same posterior, and from the three methods supplied by
+<code class="docutils literal"><span class="pre">sncosmo</span></code>, which respectively use <code class="docutils literal"><span class="pre">iminuit</span></code>, <code class="docutils literal"><span class="pre">emcee</span></code> and <code class="docutils literal"><span class="pre">nestle</span></code>.</span></p>
+</div>
+</div></blockquote>
+<p>From these results, it can be seen that above a redshift range of approximately
+<span class="math">\(z=0.5\)</span>, using <code class="docutils literal"><span class="pre">iminuit</span></code> via the <code class="docutils literal"><span class="pre">fit_lc</span></code> method produces biased summary
+statistics. Below this redshift, and for all other fitting methodologies, expressing the
+posterior via gaussian approximation loses negligible information about the posterior surface
+and introduces no detectable bias.</p>
+<p>We find identical results when generating non-canonical supernova (with <span class="math">\(x_1,\ c\)</span> not
+set to zero). Furthermore, we take the realised light curve of maximal bias and present it here.</p>
+<blockquote>
+<div><div class="figure align-center" id="id8">
+<a class="reference internal image-reference" href="_images/bias_surface.png"><img alt="_images/bias_surface.png" src="_images/bias_surface.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">The full surface for, including derived parameter <span class="math">\(\mu + M\)</span> for the generated light
+curve of maximal bias. Compared are a full posterior (derived from <code class="docutils literal"><span class="pre">emcee</span></code>) against
+summary statistics generated from the same posterior, and from the three methods supplied by
+<code class="docutils literal"><span class="pre">sncosmo</span></code>, which respectively use <code class="docutils literal"><span class="pre">iminuit</span></code>, <code class="docutils literal"><span class="pre">emcee</span></code> and <code class="docutils literal"><span class="pre">nestle</span></code>. As a difference
+between maximum likelihood and mean value is expected for skewed distributions, we utilise
+the method <code class="docutils literal"><span class="pre">scipy.stats.skewtest</span></code> to report the p-values for each marginalised parameter
+to determine which show skewness. In the above plot, all parameters bar <span class="math">\(t_0\)</span> show
+skewness with <span class="math">\(p &lt; 10^{-15}\)</span>, with actual skewness (from <code class="docutils literal"><span class="pre">scipy.stats.skew</span></code>) of
+<span class="math">\(x_1: 0.56,\ c:0.52,\ x_0:-0.04,\ t:-0.0001,\ \mu:-0.43\)</span>. In comparison to this,
+the light curve fit with the least deviation shows skewness values of
+only <span class="math">\(x_1: 0.02,\ c:0.03,\ x_0:-0.02,\ t:0.01,\ \mu:-0.01\)</span>. This explains why
+the minimiser utilised by <code class="docutils literal"><span class="pre">iminuit</span></code> - which finds the point of maximum likelihood,
+can give biased results - the point of maximum likelihood and mean are significantly
+different.</span></p>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="deep-field">
+<h3>Deep Field<a class="headerlink" href="#deep-field" title="Permalink to this headline">¶</a></h3>
+<p>We also investigate the presence of any bias when observing in the deep field. From the
+<a class="reference internal" href="#generalisation">Generalisation</a> section, we expect to discover less bias due to the increased
+signal-to-noise over the shallow fields. This is the case, as shown below, such that
+the bias in final output is lessened, however it is still present in redshifts
+above <span class="math">\(z=0.5\)</span>.</p>
+<blockquote>
+<div><div class="figure align-center" id="id9">
+<a class="reference internal image-reference" href="_images/bias_dessky_deep.png"><img alt="_images/bias_dessky_deep.png" src="_images/bias_dessky_deep.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">The same plot as the previous, except this time looking in the deep field. Notice
+the reduced bias in the <code class="docutils literal"><span class="pre">iminuit</span></code> fits (shown in green).</span></p>
+</div>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="cosmology-impact">
+<h2>Cosmology Impact<a class="headerlink" href="#cosmology-impact" title="Permalink to this headline">¶</a></h2>
+<p>To test the impact on cosmology fits this bias might have, I implemented a basic cosmology
+simulation.</p>
+<p>We start with the basics, and assume that supernova are drawn from some underlying
+distribution of absolute magnitude <span class="math">\(M_i \sim \mathcal{N}(M,\sigma_{\rm int})\)</span>. We
+set our simulation cosmology to <code class="docutils literal"><span class="pre">astropy.cosmology.WMAP9</span></code>, and (as done before), set
+our Philip&#8217;s relation variables <span class="math">\(\alpha\)</span> and <span class="math">\(\beta\)</span> to  <span class="math">\(0.14\)</span> and
+<span class="math">\(3.15\)</span> respectively, (following fiducial values from <a class="reference internal" href="inv_gauss.html#re7a0e5d21dfc-1" id="id2">[Re7a0e5d21dfc-1]</a>), and fix the values there.
+Supernova colours are drawn such that <span class="math">\(c_i \sim \mathcal{N}(0, 0.1)\)</span> and colours are drawn
+as <span class="math">\(x_{1i} \sim \mathcal{N}(0, 1)\)</span>. The redshift distribution is calculated from the
+comoving volume of the DES deep-field area of 30 square degrees using the <code class="docutils literal"><span class="pre">sncosmo</span></code>
+function <code class="docutils literal"><span class="pre">zdist</span></code>.</p>
+<p>We assume perfectly realised zero points, which at the time of analysis were given
+as <span class="math">\([32.46, 32.28, 32.55, 33.12]\)</span> for the <em>g, r, i</em> and <em>z</em> bands in the shallow field,
+and <span class="math">\([34.24, 34.85, 34.94, 35.42]\)</span>. Observational cadence
+is set to 5 days, and weather conditions and moon cycle are simulated in light curve generation.</p>
+<p>Given this, we can compute the weight as a function of the two cosmological parameters free:
+<span class="math">\(\Omega_m\)</span> and <span class="math">\(w\)</span>. We generate 500 supernova having set <span class="math">\(\sigma_{\rm int} = 0.1\)</span></p>
+<hr class="docutils" />
+<p>To test the impact on cosmology fits this bias might have, I use a very simplistic
+cosmology fitter and do not correct for selection bias. Thus we expect the final
+cosmology to be biased, however both input data (one using skewed <code class="docutils literal"><span class="pre">minuit</span></code> output
+and the other using the output summary stats from an <code class="docutils literal"><span class="pre">emcee</span></code> chain) have the same
+selection effects and so should still give the same output posterior surface.</p>
+<p>Using selection effects of one point in one band being above a signal to noise
+of 4, we plot the supernova distance modulus minus the cosmology distance
+modulus to show the bias in redshift, for both the shallow and deep field.</p>
+<blockquote>
+<div><div class="figure align-center" id="id10">
+<a class="reference internal image-reference" href="_images/obs_cosmology_shallow.png"><img alt="_images/obs_cosmology_shallow.png" src="_images/obs_cosmology_shallow.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">An illustration of the bias produced between the two different fitting methodologies
+for observations in the shallow field of 1031 supernova.</span></p>
+</div>
+<div class="figure align-center" id="id11">
+<a class="reference internal image-reference" href="_images/obs_cosmology_deep.png"><img alt="_images/obs_cosmology_deep.png" src="_images/obs_cosmology_deep.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">An illustration of the bias produced between the two different fitting methodologies
+for observations in the deep field of 1474 supernova.</span></p>
+</div>
+</div></blockquote>
+<p>The output surfaces for the supernova data put through a simplistic cosmology analysis
+are shown below, and we can see a difference in both the recovered value for <span class="math">\(\Omega_m\)</span> and <span class="math">\(w\)</span>.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="26%" />
+<col width="24%" />
+<col width="26%" />
+<col width="18%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Method</td>
+<td colspan="2"><strong>Shallow</strong></td>
+<td colspan="2"><strong>Deep</strong></td>
+</tr>
+<tr class="row-even"><td>&#160;</td>
+<td><span class="math">\(\Omega_m\)</span></td>
+<td><span class="math">\(w\)</span></td>
+<td><span class="math">\(\Omega_m\)</span></td>
+<td><span class="math">\(w\)</span></td>
+</tr>
+<tr class="row-odd"><td>emcee</td>
+<td><span class="math">\(0.326^{+0.025}_{-0.029}\)</span></td>
+<td><span class="math">\(-1.13\pm 0.12\)</span></td>
+<td><span class="math">\(0.323^{+0.041}_{-0.050}\)</span></td>
+<td><span class="math">\(-1.11\pm 0.17\)</span></td>
+</tr>
+<tr class="row-even"><td>minuit</td>
+<td><span class="math">\(0.369^{+0.019}_{-0.022}\)</span></td>
+<td><span class="math">\(-1.30^{+0.12}_{-0.13}\)</span></td>
+<td><span class="math">\(0.416^{+0.023}_{-0.030}\)</span></td>
+<td><span class="math">\(-1.51\pm 0.20\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The offset is more clearly shown in the likelihood surfaces:</p>
+<blockquote>
+<div><div class="figure align-center" id="id12">
+<a class="reference internal image-reference" href="_images/comparison_shallow.png"><img alt="_images/comparison_shallow.png" src="_images/comparison_shallow.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">Comparison of the likelihood surfaces when using summary statistics
+of different light curve fitting algorithms for observations in the shallow field.</span></p>
+</div>
+<div class="figure align-center" id="id13">
+<a class="reference internal image-reference" href="_images/comparison_deep.png"><img alt="_images/comparison_deep.png" src="_images/comparison_deep.png" style="width: 100%;" /></a>
+<p class="caption"><span class="caption-text">Comparison of the likelihood surfaces when using summary statistics
+of different light curve fitting algorithms for observations in the deep field.</span></p>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h2>
+<p>From investigating the biases imparted onto <span class="math">\(\mu +M\)</span> from the assumption of posterior
+gaussianity, we find the assumption of gaussianity to hold for <code class="docutils literal"><span class="pre">emcee</span></code> or <code class="docutils literal"><span class="pre">nestle</span></code> based
+fits across all redshifts, and the assumption to only hold for <span class="math">\(z&lt;0.5\)</span> objects when
+using <code class="docutils literal"><span class="pre">iminuit</span></code>. From this, we recommend utilising the <code class="docutils literal"><span class="pre">emcee</span></code> or <code class="docutils literal"><span class="pre">nestle</span></code> fitting
+methods. When using either of those methods, we find no evidence of detectable bias
+in the output distance modulus for supernova events.</p>
+<table class="docutils citation" frame="void" id="re7a0e5d21dfc-1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[Re7a0e5d21dfc-1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> Betoule, M., Kessler, R., Guy, J. et al. (2014), &#8220;Improved cosmological constraints from
+a joint analysis of the SDSS-II and SNLS supernova samples&#8221;,
+<a class="reference external" href="http://adsabs.harvard.edu/abs/2014A%26A...568A..22B">http://adsabs.harvard.edu/abs/2014A%26A...568A..22B</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, dessn.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.1',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="_static/mathconf.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+ <script type="text/javascript">
+    $(document).ready(function() {
+        $(".toggle > *").hide();
+        $(".toggle .admonition-title").show();
+        $(".toggle .admonition-title").click(function() {
+            $(this).parent().children().not(".admonition-title").toggle(200);
+            $(this).parent().toggleClass("open");
+            $(this).parent().children(".admonition-title").toggleClass("open");
+        })
+    });
+</script>
+
+
+</body>
+</html>
